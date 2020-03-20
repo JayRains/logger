@@ -108,9 +108,9 @@ func main() {
 ```json
 {
   "logger": {
-    "file_name": "app.log", //保存日志到磁盘的文件名
+    "file_name": "app.log",             //保存日志到磁盘的文件名
     "file_cording": true,		//是否开启文件记录
-    "level": "DEBUG",				//日志的等级
+    "level": "DEBUG",		        //日志的等级
     "identifier": "$",			//打印消息的标示符
     "time_format": "2006-01-02 15:04:05"   //你喜欢的时间格式
   }
