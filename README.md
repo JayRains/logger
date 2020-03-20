@@ -70,11 +70,11 @@ replace github.com/eliot-jay/logger v1.0.0 => /home/jay/gosrc/pkg/mod/github.com
 
 ```go
 package test
-import "github.com/eliot-jay/logger/log"
+import "github.com/eliot-jay/logger"
 
 func main () {
   
-  logger:=log.DefaultLogger(false) //true为开启文件记录
+    logger:=logger.DefaultLogger(false) //true为开启文件记录
 	logger.DEBUG("This's debug message")
 	logger.INFO("This's info message")
 	logger.WARN("This's warn message")
@@ -89,10 +89,10 @@ func main () {
 ```go
 package main
 
-import "github.com/eliot-jay/logger/log"
+import "github.com/eliot-jay/logger"
 
 func main() {
-	logger,err:=log.NewLogByJsonFile("./log.json")
+	logger,err:=logger.NewLogByJsonFile("./.json")
 	if err!=nil{
 		panic(err)
 	}
@@ -110,10 +110,10 @@ func main() {
 ```json
 {
   "logger": {
-    "file_name": "app.log",             //保存日志到磁盘的文件名
-    "file_cording": true,		//是否开启文件记录
-    "level": "DEBUG",		        //日志的等级
-    "identifier": "$",			//打印消息的标示符
+    "file_name": "app.",             //保存日志到磁盘的文件名
+    "file_cording": true,		     //是否开启文件记录
+    "level": "DEBUG",		         //日志的等级
+    "identifier": "$",			     //打印消息的标示符
     "time_format": "2006-01-02 15:04:05"   //你喜欢的时间格式
   }
 }
@@ -125,14 +125,14 @@ func main() {
 ```go
 package main
 
-import "github.com/eliot-jay/logger/log"
+import "github.com/eliot-jay/logger"
 import "fmt"
 
 func main()  {
-	logger := log.DefaultLogger(false)
+	logger := logger.DefaultLogger(false)
   //上传到 云 或者数据库的 接口
-	logger.ReceiveLog(func(log string) {
-		fmt.Println("receive: ",log)
+	logger.ReceiveLog(func( string) {
+		fmt.Println("receive: ",)
 	})
 	
 	logger.DEBUG("hello debug")
