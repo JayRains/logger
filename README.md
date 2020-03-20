@@ -31,7 +31,7 @@ go get: github.com/eliotoderson/logger@v1.0.0: parsing go.mod:
 路径在你 **GOPATH** 里的`gopath/pkg/mod/github.com/eliotoderson/logger@v1.0.0`
 
 ```
-replace github.com/eliotoderson/logger v1.0.0 => /home/jay/gosrc/pkg/mod/github.com/eliotoderson/logger@v1.0.0
+replace github.com/eliotoderson/logger v1.0.0 => /home/jay/gosrc/pkg/mod/github.com/eliotoderson/logger@v1.0.1
 ```
 
 没有错误请忽略
@@ -50,7 +50,7 @@ replace github.com/eliotoderson/logger v1.0.0 => /home/jay/gosrc/pkg/mod/github.
 
 ####	Goland IDE的效果
 
-![1584630606706](assets/1584630606706.png)
+![1584630606706](https://github.com/eliotoderson/logger/tree/master/assets/1584630606706.png)
 
 **如:** 在`goland` IDE 中点击 `main.go:10` 可快速`跳转`到打印消息的行数
 
@@ -60,7 +60,7 @@ replace github.com/eliotoderson/logger v1.0.0 => /home/jay/gosrc/pkg/mod/github.
 
 终端的效果是不同的 , 因为配色方案的结果 , 终端代码的行数无法进行跳转 , 默认颜色为`浅蓝色`**+** `下划线 `
 
-![1584632774672](assets/1584632774672.png)
+![1584632774672](https://github.com/eliotoderson/logger/tree/master/assets/1584632774672.png)
 
 
 
