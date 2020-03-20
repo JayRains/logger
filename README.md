@@ -73,12 +73,14 @@ package test
 import "github.com/eliot-jay/logger/log"
 
 func main () {
+  
   logger:=log.DefaultLogger(false) //true为开启文件记录
 	logger.DEBUG("This's debug message")
 	logger.INFO("This's info message")
 	logger.WARN("This's warn message")
 	logger.ERROR("this's error message")
 	logger.SERIOUS("this's serious message")
+  
 }
 ```
 
