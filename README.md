@@ -31,7 +31,7 @@ go get: github.com/eliotoderson/logger@v1.0.0: parsing go.mod:
 路径在你 **GOPATH** 里的`gopath/pkg/mod/github.com/eliotoderson/logger@v1.0.0`
 
 ```
-replace github.com/eliotoderson/logger v1.0.0 => /home/jay/gosrc/pkg/mod/github.com/eliotoderson/logger@v1.0.0
+replace github.com/eliotoderson/logger v1.0.0 => /home/jay/gosrc/pkg/mod/github.com/eliotoderson/logger@v1.0.1
 ```
 
 没有错误请忽略
