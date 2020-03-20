@@ -1,12 +1,12 @@
-package main
+package logger
 
 import (
 	"fmt"
-	"logger/log"
+	"testing"
 )
 
-func main()  {
-	logger := log.DefaultLogger(false)
+func TestNewLogger(t *testing.T) {
+	logger := DefaultLogger(false)
 	logger.ReceiveLog(func(log string) {
 		fmt.Println("receive: ",log)
 	})
