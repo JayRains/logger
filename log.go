@@ -1,4 +1,5 @@
-package logger
+package main
+
 
 import (
 	"fmt"
@@ -49,12 +50,13 @@ type logInfo struct {
 }
 
 type logger struct {
-	lock        *sync.Mutex
-	fileName    string
-	level       string
-	identifier  string
-	timeFormat  string
-	fileCording bool
+	lock         *sync.Mutex
+	fileName     string
+	level        string
+	identifier   string
+	timeFormat   string
+	fileCording  bool
+	retrieveFunc handlerLog
 	logInfo
 }
 
@@ -90,13 +92,16 @@ func (l *logger) state(level string, f interface{}, v ...interface{}) {
 
 func (l *logger) handleText(level string) {
 	l.lock.Lock()
-	defer l.lock.Unlock()
 	l.when = l.nowTime(level)
 	l.path = initPrint()
 	l.intactLogger()
+	if l.retrieveFunc!=nil{
+		l.retrieveFunc(l.intactLog)
+	}
 	// open file cording
 	if l.fileCording {log <- l.intactLog}
 	l.printRow(l.handlerColor(level))
+	l.lock.Unlock()
 }
 
 func (l *logger) handlerColor(level string) string {
@@ -116,7 +121,7 @@ func (l *logger) intactLogger(){
 }
 
 func (l *logger)ReceiveLog(handle handlerLog)  {
-	handle(l.intactLog)
+	l.retrieveFunc = handle
 }
 
 func (l *logger) writeFile() {
