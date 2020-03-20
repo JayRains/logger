@@ -13,30 +13,8 @@
 ## 安装
 
 ```shel
-go get github.com/eliot-jay/logger
+go get github.com/eliot-jay/logger@v1.0.3
 ```
-
-####	如果get发生错误:
-
-```shell
-go get: github.com/eliot-jay/logger@v1.0.0: parsing go.mod:
-        module declares its path as: logger
-                but was required as: github.com/eliot-jay/logger
-```
-
-##### 错误解决方法:
-
-在go.mod 里使用`replace`关键字添加包的`绝对路径`
-
-路径在你 **GOPATH** 里
-
-`gopath/pkg/mod/github.com/eliot-jay/logger@v1.0.0`
-
-```
-replace github.com/eliot-jay/logger v1.0.0 => /home/jay/gosrc/pkg/mod/github.com/eliot-jay/logger@v1.0.0
-```
-
-没有错误请忽略
 
 ##	日志的等级:
 
@@ -73,8 +51,8 @@ package test
 import "github.com/eliot-jay/logger"
 
 func main () {
-  
-    logger:=logger.DefaultLogger(false) //true为开启文件记录
+
+	logger:=logger.DefaultLogger(false) //true为开启文件记录
 	logger.DEBUG("This's debug message")
 	logger.INFO("This's info message")
 	logger.WARN("This's warn message")
