@@ -13,25 +13,27 @@
 ## 安装
 
 ```shel
-go get github.com/eliotoderson/logger
+go get github.com/eliot-jay/logger
 ```
 
 ####	如果get发生错误:
 
 ```shell
-go get: github.com/eliotoderson/logger@v1.0.0: parsing go.mod:
+go get: github.com/eliot-jay/logger@v1.0.0: parsing go.mod:
         module declares its path as: logger
-                but was required as: github.com/eliotoderson/logger
+                but was required as: github.com/eliot-jay/logger
 ```
 
 ##### 错误解决方法:
 
 在go.mod 里使用`replace`关键字添加包的`绝对路径`
 
-路径在你 **GOPATH** 里的`gopath/pkg/mod/github.com/eliotoderson/logger@v1.0.0`
+路径在你 **GOPATH** 里
+
+`gopath/pkg/mod/github.com/eliot-jay/logger@v1.0.0`
 
 ```
-replace github.com/eliotoderson/logger v1.0.0 => /home/jay/gosrc/pkg/mod/github.com/eliotoderson/logger@v1.0.1
+replace github.com/eliot-jay/logger v1.0.0 => /home/jay/gosrc/pkg/mod/github.com/eliot-jay/logger@v1.0.0
 ```
 
 没有错误请忽略
@@ -68,10 +70,10 @@ replace github.com/eliotoderson/logger v1.0.0 => /home/jay/gosrc/pkg/mod/github.
 
 ```go
 package test
-import "github.com/eliotoderson/logger"
+import "github.com/eliot-jay/logger/log"
 
 func main () {
-  logger:=DefaultLogger(false) //true为开启文件记录
+  logger:=log.DefaultLogger(false) //true为开启文件记录
 	logger.DEBUG("This's debug message")
 	logger.INFO("This's info message")
 	logger.WARN("This's warn message")
@@ -85,10 +87,10 @@ func main () {
 ```go
 package main
 
-import "github.com/eliotoderson/logger"
+import "github.com/eliot-jay/logger/log"
 
 func main() {
-	logger,err:=logger.NewLogByJsonFile("./log.json")
+	logger,err:=log.logger.NewLogByJsonFile("./log.json")
 	if err!=nil{
 		panic(err)
 	}
@@ -121,11 +123,11 @@ func main() {
 ```go
 package main
 
+import "github.com/eliot-jay/logger/log"
 import "fmt"
-import "github.com/eliotoderson/logger"
 
 func main()  {
-	logger := DefaultLogger(false)
+	logger := log.DefaultLogger(false)
   //上传到 云 或者数据库的 接口
 	logger.ReceiveLog(func(log string) {
 		fmt.Println("receive: ",log)
