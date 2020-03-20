@@ -90,7 +90,7 @@ package main
 import "github.com/eliot-jay/logger/log"
 
 func main() {
-	logger,err:=log.logger.NewLogByJsonFile("./log.json")
+	logger,err:=log.NewLogByJsonFile("./log.json")
 	if err!=nil{
 		panic(err)
 	}
