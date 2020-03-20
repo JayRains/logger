@@ -1,4 +1,4 @@
-package main
+package log
 
 
 import (
@@ -30,7 +30,7 @@ import (
 
 	json config
 		{
-	  "logger": {
+	  "log": {
 		"file_name": "app.log",
 		"file_cording": true,
 		"level": "DEBUG",
@@ -99,7 +99,8 @@ func (l *logger) handleText(level string) {
 		l.retrieveFunc(l.intactLog)
 	}
 	// open file cording
-	if l.fileCording {log <- l.intactLog}
+	if l.fileCording {
+		log <- l.intactLog}
 	l.printRow(l.handlerColor(level))
 	l.lock.Unlock()
 }
@@ -128,7 +129,7 @@ func (l *logger) writeFile() {
 	if l.fileCording {
 		go func() {
 			write, err := os.OpenFile("./"+l.fileName, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
-			if err != nil {l.SERIOUS("Creat logger file Failed");return}
+			if err != nil {l.SERIOUS("Creat log file Failed");return}
 			defer write.Close()
 			for {msg := <-log;_, _ = write.WriteString(msg)}
 		}()

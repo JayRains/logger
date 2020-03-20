@@ -1,9 +1,12 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"logger/log"
+)
 
 func main()  {
-	logger := DefaultLogger(false)
+	logger := log.DefaultLogger(false)
 	logger.ReceiveLog(func(log string) {
 		fmt.Println("receive: ",log)
 	})
