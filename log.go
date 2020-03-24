@@ -85,13 +85,14 @@ check log level . current configure  level greater than  print level then print
 */
 func (l *logger) state(level string, f interface{}, v ...interface{}) {
 	if levelInt[l.level] >= levelInt[level] {
+		l.lock.Lock()
 		l.msg = formatLog(f, v...)
 		l.handleText(level)
+		l.lock.Unlock()
 	}
 }
 
 func (l *logger) handleText(level string) {
-	l.lock.Lock()
 	l.when = l.nowTime(level)
 	l.path = initPrint()
 	l.intactLogger()
@@ -102,7 +103,6 @@ func (l *logger) handleText(level string) {
 	if l.fileCording {
 		log <- l.intactLog}
 	l.printRow(l.handlerColor(level))
-	l.lock.Unlock()
 }
 
 func (l *logger) handlerColor(level string) string {
