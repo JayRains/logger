@@ -10,17 +10,15 @@ import (
 
 const (
 	//level field
-	debug   = "DEBUG"
+	debug   = "DBUG"
 	info    = "INFO"
 	warn    = "WARN"
-	err     = "ERROR"
-	serious = "SERIOUS"
-
+	err     = "ERRO"
+	serious = "SERI"
 
 	//system variable
 	skip      = 5
 	underline = "Underline"
-	logChannelCache = 100
 )
 
 var (
@@ -32,8 +30,8 @@ var (
 		newBrush("1;32"), // Debug              绿色		4
 		newBrush("4;36"), //underline          青色+下划线 5
 	}
-	levelInt = make(map[string]int)
-	log      = make(chan string, logChannelCache)
+	levelInt  = make(map[string]int)
+	writeDisk = make(chan string)
 )
 
 func formatLog(f interface{}, v ...interface{}) string {

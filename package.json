@@ -1,0 +1,10 @@
+{
+  "logger": {
+    "color": false,
+    "save_path": "./app.log",
+    "file_cording": false,
+    "level": "DBUG",
+    "identifier": "$",
+    "time_format": "2006-01-02 15:04:05"
+  }
+}

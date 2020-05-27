@@ -13,7 +13,7 @@
 ## 安装
 
 ```shel
-go get github.com/eliot-jay/logger@v1.0.3
+go get github.com/eliot-jay/logger
 ```
 
 ##	日志的等级:
@@ -22,11 +22,11 @@ go get github.com/eliot-jay/logger@v1.0.3
 
 | 等级 | 配置 | 释义                                             | 控制台颜色 |
 | ---- | ---- | ------------------------------------------------ | :--------: |
-| 0    | SERIOUS |可能有危险的严重错误,如:初始化,数据库连接错误等 |红色底|
-| 1    | ERROR |普通错误,断言失败,类型转换失败等   						 |红色|
+| 0    | SERI |可能有危险的严重错误,如:初始化,数据库连接错误等 |红色底|
+| 1    | ERRO |普通错误,断言失败,类型转换失败等   						 |红色|
 | 2    | WARN | 普通警告，比如权限出错，访问异常等               |紫色底|
 | 3    | INFO | 重要消息                   									 |蓝色 |
-| 4    | DEBUG | 调试消息                                    |绿色|
+| 4    | DBUG | 调试消息                                    |绿色|
 
 ####	Goland IDE的效果
 
@@ -52,12 +52,12 @@ import "github.com/eliot-jay/logger"
 
 func main () {
 
-	logger:=logger.DefaultLogger(false) //true为开启文件记录
-	logger.DEBUG("This's debug message")
-	logger.INFO("This's info message")
-	logger.WARN("This's warn message")
-	logger.ERROR("this's error message")
-	logger.SERIOUS("this's serious message")
+  logger := DefaultLogger(false, "./app.log", false)
+	logger.DEBUG("hello debug")
+	logger.INFO("hello info")
+	logger.ERROR("hello error")
+	logger.WARN("hello warn")
+	logger.SERIOUS("hello serious")
   
 }
 ```
@@ -88,10 +88,11 @@ func main() {
 ```json
 {
   "logger": {
-    "file_name": "app.",   //保存日志到磁盘的文件名
-    "file_cording": true,  //是否开启文件记录
-    "level": "DEBUG",	   //日志的等级
-    "identifier": "$",     //打印消息的标示符
+    "color": true,              //开启颜色,windows请关闭
+    "save_path": "./app.log",   //保存日志的路径
+    "file_cording": true,       //是否开启文件记录
+    "level": "DEBUG",           //日志的等级
+    "identifier": "$",          //打印消息的标示符
     "time_format": "2006-01-02 15:04:05"   //你喜欢的时间格式
   }
 }
