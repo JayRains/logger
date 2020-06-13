@@ -58,7 +58,7 @@ type logInfo struct {
 	intactLog string
 }
 
-type logger struct {
+type Logger struct {
 	color        bool
 	lock         *sync.Mutex
 	fileName     string
@@ -70,27 +70,27 @@ type logger struct {
 	logInfo
 }
 
-func (l *logger) DEBUG(f interface{}, v ...interface{}) {
+func (l *Logger) DEBUG(f interface{}, v ...interface{}) {
 	l.state(debug, f, v...)
 }
 
-func (l *logger) INFO(f interface{}, v ...interface{}) {
+func (l *Logger) INFO(f interface{}, v ...interface{}) {
 	l.state(info, f, v...)
 }
 
-func (l *logger) WARN(f interface{}, v ...interface{}) {
+func (l *Logger) WARN(f interface{}, v ...interface{}) {
 	l.state(warn, f, v...)
 }
 
-func (l *logger) ERROR(f interface{}, v ...interface{}) {
+func (l *Logger) ERROR(f interface{}, v ...interface{}) {
 	l.state(err, f, v...)
 }
 
-func (l *logger) SERIOUS(f interface{}, v ...interface{}) {
+func (l *Logger) SERIOUS(f interface{}, v ...interface{}) {
 	l.state(serious, f, v...)
 }
 
-func (l *logger) config(path string) (*model.Logger, error) {
+func (l *Logger) config(path string) (*model.Logger, error) {
 	defer func() {
 		fatal := recover()
 		if fatal != nil {
@@ -119,7 +119,7 @@ func (l *logger) config(path string) (*model.Logger, error) {
 	return &set, nil
 }
 
-func (l *logger) decode(obj interface{}, rType reflect.Type, rValue reflect.Value) {
+func (l *Logger) decode(obj interface{}, rType reflect.Type, rValue reflect.Value) {
 	rObj := reflect.ValueOf(obj)
 	OneKey := rObj.MapKeys()
 
@@ -153,7 +153,7 @@ func (l *logger) decode(obj interface{}, rType reflect.Type, rValue reflect.Valu
 /*
 check log level . current configure  level greater than  print level then print
 */
-func (l *logger) state(level string, f interface{}, v ...interface{}) {
+func (l *Logger) state(level string, f interface{}, v ...interface{}) {
 	if levelInt[l.level] >= levelInt[level] {
 		l.lock.Lock()
 		l.msg = formatLog(f, v...)
@@ -162,7 +162,7 @@ func (l *logger) state(level string, f interface{}, v ...interface{}) {
 	}
 }
 
-func (l *logger) handleText(level string) {
+func (l *Logger) handleText(level string) {
 	l.when = l.nowTime(level)
 	l.path = initPrint()
 	l.intactLogger()
@@ -181,29 +181,29 @@ func (l *logger) handleText(level string) {
 
 }
 
-func (l *logger) handlerColor(level string) string {
+func (l *Logger) handlerColor(level string) string {
 	return fmt.Sprintf("%v %v %v", colors[levelInt[level]](l.when), colors[levelInt[underline]](l.path), l.identifier+": "+colors[levelInt[level]](l.msg))
 }
 
-func (l *logger) nowTime(level string) string {
+func (l *Logger) nowTime(level string) string {
 	return fmt.Sprintf("%v [%s]", time.Now().Format(l.timeFormat), level)
 }
 
-func (l *logger) printRow(msg string) {
+func (l *Logger) printRow(msg string) {
 	if _, err := os.Stdout.Write(append([]byte(msg), '\n')); err != nil {
 		l.ERROR(err)
 	}
 }
 
-func (l *logger) intactLogger() {
+func (l *Logger) intactLogger() {
 	l.intactLog = fmt.Sprintf("%v %v %v\n", l.when, l.path, l.identifier+": "+l.msg)
 }
 
-func (l *logger) ReceiveLog(handle handlerLog) {
+func (l *Logger) ReceiveLog(handle handlerLog) {
 	l.retrieveFunc = handle
 }
 
-func (l *logger) writeFile() {
+func (l *Logger) writeFile() {
 	if l.fileCording {
 		go func() {
 			write, err := os.OpenFile(l.fileName, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
@@ -222,8 +222,8 @@ func (l *logger) writeFile() {
 
 type handlerLog func(log string)
 
-func NewLogger(level, identifier, timeFormat, savePath string, fileCording bool, color bool) *logger {
-	log := &logger{
+func NewLogger(level, identifier, timeFormat, savePath string, fileCording bool, color bool) *Logger {
+	log := &Logger{
 		lock:        &sync.Mutex{},
 		level:       level,
 		identifier:  identifier,
@@ -238,8 +238,8 @@ func NewLogger(level, identifier, timeFormat, savePath string, fileCording bool,
 	return log
 }
 
-func NewLogByJsonFile(JsonPath string) (*logger, error) {
-	old := logger{}
+func NewLogByJsonFile(JsonPath string) (*Logger, error) {
+	old := Logger{}
 	set, _ := old.config(JsonPath)
 	return NewLogger(
 		set.Level,
@@ -253,7 +253,7 @@ func NewLogByJsonFile(JsonPath string) (*logger, error) {
 }
 
 // windows system please close color
-func DefaultLogger(writeFile bool, savePath string, color bool) *logger {
+func DefaultLogger(writeFile bool, savePath string, color bool) *Logger {
 	return NewLogger(
 		"DEBUG",
 		"MSG",
