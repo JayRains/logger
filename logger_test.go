@@ -6,7 +6,7 @@ import (
 
 func TestNewLogger(t *testing.T) {
 	var logger *Logger
-	logger = DefaultLogger(false,"",true)
+	logger = DefaultLogger(true)
 	logger.DEBUG("hello debug")
 	logger.INFO("hello info")
 	logger.ERROR("hello error")

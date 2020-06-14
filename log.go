@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"reflect"
+	"runtime"
 	"strings"
 	"sync"
 	"time"
@@ -253,14 +254,33 @@ func NewLogByJsonFile(JsonPath string) (*Logger, error) {
 }
 
 // windows system please close color
-func DefaultLogger(writeFile bool, savePath string, color bool) *Logger {
-	return NewLogger(
+func DefaultLogger(openColor bool) (l *Logger) {
+	const (
+		linux = "linux"
+		windows = "windows"
+		systemType = runtime.GOOS
+	)
+
+
+	l = NewLogger(
 		"DBUG",
 		"$",
 		"2006-01-02 15:04:05",
-		savePath,
-		writeFile,
-		color,
+		"",
+		false,
+		openColor,
 	)
+
+
+	if systemType == linux{
+
+		return l
+	}else if systemType == windows{
+
+		l.color = false
+		l.INFO("Windows Please Off Color for False")
+	}
+
+	return l
 
 }
