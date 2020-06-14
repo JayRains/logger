@@ -255,8 +255,8 @@ func NewLogByJsonFile(JsonPath string) (*Logger, error) {
 // windows system please close color
 func DefaultLogger(writeFile bool, savePath string, color bool) *Logger {
 	return NewLogger(
-		"DEBUG",
-		"MSG",
+		"DBUG",
+		"$",
 		"2006-01-02 15:04:05",
 		savePath,
 		writeFile,

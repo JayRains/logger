@@ -6,10 +6,12 @@ import (
 
 func TestNewLogger(t *testing.T) {
 	var logger *Logger
-	logger ,_ = NewLogByJsonFile("./package.json")
+	logger = DefaultLogger(false,"",true)
 	logger.DEBUG("hello debug")
 	logger.INFO("hello info")
 	logger.ERROR("hello error")
 	logger.WARN("hello warn")
 	logger.SERIOUS("hello serious")
+
+
 }
