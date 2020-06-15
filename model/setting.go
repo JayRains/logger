@@ -5,6 +5,7 @@ type Logger struct {
 	Identifier  string `json:"identifier"`
 	TimeFormat  string `json:"time_format"`
 	FileCording bool   `json:"file_cording"`
-	Color       bool   `json:"color"`
+	OpenColor       bool   `json:"open_color"`
 	SavePath    string `json:"save_path"`
 }
+

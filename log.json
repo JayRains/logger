@@ -1,6 +1,6 @@
 {
   "logger": {
-    "color": false,
+    "open_color": true,
     "save_path": "./app.log",
     "file_cording": false,
     "level": "DBUG",

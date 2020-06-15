@@ -5,8 +5,8 @@ import (
 )
 
 func TestNewLogger(t *testing.T) {
-	var logger *Logger
-	logger = DefaultLogger(true)
+	var logger Console
+	logger ,_ = NewLogByJsonFile("./log.json")
 	logger.DEBUG("hello debug")
 	logger.INFO("hello info")
 	logger.ERROR("hello error")

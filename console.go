@@ -1,100 +1,154 @@
 package logger
 
 import (
-	"fmt"
-	"os"
+	"github.com/eliot-jay/logger/model"
+	"reflect"
 	"runtime"
-	"strconv"
-	"strings"
+	"sync"
 )
 
-const (
-	//level field
-	debug   = "DBUG"
-	info    = "INFO"
-	warn    = "WARN"
-	err     = "ERRO"
-	serious = "SERI"
+/*	all time format
 
-	//system variable
-	skip      = 5
-	underline = "Underline"
-)
+	ANSIC       	"Mon Jan _2 15:04:05 2006"
+	UnixDate		"Mon Jan _2 15:04:05 MST 2006"
+	RubyDate		"Mon Jan 02 15:04:05 -0700 2006"
+	RFC822			"02 Jan 06 15:04 MST"
+	RFC822Z			"02 Jan 06 15:04 -0700"
+	RFC850			"Monday, 02-Jan-06 15:04:05 MST"
+	RFC1123			"Mon, 02 Jan 2006 15:04:05 MST"
+	RFC1123Z		"Mon, 02 Jan 2006 15:04:05 -0700"
+	RFC3339			"2006-01-02T15:04:05Z07:00"
+	RFC3339Nano		"2006-01-02T15:04:05.999999999Z07:00"
+	Kitchen			"3:04PM"
+	Stamp			"Jan _2 15:04:05"
+	StampMilli		"Jan _2 15:04:05.000"
+	StampMicro		"Jan _2 15:04:05.000000"
+	StampNano		"Jan _2 15:04:05.000000000"
+	RFC3339Nano1	"2006-01-02 15:04:05.999999999 -0700 MST"
+	DEFAULT			"2006-01-02 15:04:05"
 
-var (
-	colors = []brush{
-		newBrush("1;41"), // Fatal              红色底	0
-		newBrush("1;31"), // Error              红色		1
-		newBrush("1;45"), // Warn               紫红底	2
-		newBrush("1;34"), // Info               蓝色		3
-		newBrush("1;32"), // Debug              绿色		4
-		newBrush("4;36"), //underline          青色+下划线 5
+	json config
+		{
+	  "log": {
+		"file_name": "app.log",
+		"file_cording": true,
+		"level": "DEBUG",
+		"identifier": "$",
+		"time_format": "2006-01-02 15:04:05"
+	  }
 	}
-	levelInt  = make(map[string]int)
-	writeDisk = make(chan string)
-)
 
-func formatLog(f interface{}, v ...interface{}) string {
-	var msg string
-	switch f.(type) {
-	case string:
-		msg = f.(string)
-		if len(v) == 0 {
-			return msg
-		}
-		if strings.Contains(msg, "%") && !strings.Contains(msg, "%%") {
-			//auto jump sprint
-		} else {
-			//add format char
-			msg += strings.Repeat(" %v", len(v))
-		}
-	default:
-		msg = fmt.Sprint(f)
-		if len(v) == 0 {
-			return msg
-		}
-		//add format char
-		msg += strings.Repeat(" %v", len(v))
-	}
-	return fmt.Sprintf(msg, v...)
+
+*/
+
+type Console interface {
+	config(string) (*model.Logger, error)
+	decode(interface{}, reflect.Type, reflect.Value)
+	DEBUG(f interface{}, v ...interface{})
+	INFO(f interface{}, v ...interface{})
+	WARN(f interface{}, v ...interface{})
+	ERROR(f interface{}, v ...interface{})
+	SERIOUS(f interface{}, v ...interface{})
 }
 
-func ToString(i int) string {
-	return ":" + strconv.Itoa(i)
+
+type Logger struct {
+	color        bool
+	lock         *sync.Mutex
+	fileName     string
+	level        string
+	identifier   string
+	timeFormat   string
+	fileCording  bool
+	retrieveFunc handlerLog
+	logInfo
 }
 
-//initialize log level
-func init() {
-	//log level
-	levelInt[debug] = 4
-	levelInt[info] = 3
-	levelInt[warn] = 2
-	levelInt[err] = 1
-	levelInt[serious] = 0
 
-	//file path color
-	levelInt[underline] = 5
+type handlerLog func(log string)
+type logInfo struct {
+	when      string
+	path      string
+	msg       string
+	intactLog string
 }
 
-type brush func(string) string
 
-//color brush
-func newBrush(color string) brush {
-	pre := "\033[" // \033[ 1; 32m%s  \033[0m
-	reset := "\033[0m"
-	return func(text string) string {
-		return pre + color + "m" + text + reset
+
+func (l *Logger) DEBUG(f interface{}, v ...interface{}) {
+	l.state(debug, f, v...)
+}
+
+func (l *Logger) INFO(f interface{}, v ...interface{}) {
+	l.state(info, f, v...)
+}
+
+func (l *Logger) WARN(f interface{}, v ...interface{}) {
+	l.state(warn, f, v...)
+}
+
+func (l *Logger) ERROR(f interface{}, v ...interface{}) {
+	l.state(err, f, v...)
+}
+
+func (l *Logger) SERIOUS(f interface{}, v ...interface{}) {
+	l.state(serious, f, v...)
+}
+
+
+func NewLogger(level, identifier, timeFormat, savePath string, fileCording bool, color bool) *Logger {
+	log := &Logger{
+		lock:        &sync.Mutex{},
+		level:       level,
+		identifier:  identifier,
+		timeFormat:  timeFormat,
+		fileCording: fileCording,
+		fileName:    savePath,
+		color:       color,
 	}
+	if log.fileCording {
+		log.writeFile()
+	}
+	return log
 }
 
-//initialize log got print Row number
-func initPrint() string {
-	rpc := make([]uintptr, 1)
-	n := runtime.Callers(skip, rpc[:])
-	if n < 1 {
-		return ""
+func NewLogByJsonFile(JsonPath string) (Console, error) {
+	old := Logger{}
+	set, _ := old.config(JsonPath)
+	return NewLogger(
+		set.Level,
+		set.Identifier,
+		set.TimeFormat,
+		set.SavePath,
+		set.FileCording,
+		set.OpenColor,
+	), nil
+
+}
+
+// windows system please close color
+func DefaultLogger()Console{
+	const (
+		linux = "linux"
+		systemType = runtime.GOOS
+	)
+
+
+	l := NewLogger(
+		"DBUG",
+		"$",
+		"2006-01-02 15:04:05",
+		"",
+		false,
+		true,
+	)
+
+
+	if systemType == linux{
+		return l
 	}
-	frame, _ := runtime.CallersFrames(rpc).Next()
-	currentDir, _ := os.Getwd()
-	return strings.Replace(frame.File, currentDir+"/", "", -1) + ToString(frame.Line)
+	l.color = false
+	l.INFO("Windows Please Off Color for False")
+	return l
+
 }
