@@ -52,17 +52,17 @@ import "github.com/eliot-jay/logger"
 
 func main () {
 
-  logger := DefaultLogger(false, "./app.log", false)
-	logger.DEBUG("hello debug")
-	logger.INFO("hello info")
-	logger.ERROR("hello error")
-	logger.WARN("hello warn")
-	logger.SERIOUS("hello serious")
+    logger := DefaultLogger()
+    logger.DEBUG("hello debug")
+    logger.INFO("hello info")
+    logger.ERROR("hello error")
+    logger.WARN("hello warn")
+    logger.SERIOUS("hello serious")
   
 }
 ```
 
-####	json文件中获取配置:
+####	yaml文件中获取配置:
 
 ```go
 package main
@@ -70,32 +70,26 @@ package main
 import "github.com/eliot-jay/logger"
 
 func main() {
-	logger,err:=logger.NewLogByJsonFile("./log.json")
-	if err!=nil{
-		panic(err)
-	}
-	logger.DEBUG("This's debug message")
-	logger.INFO("This's info message")
-	logger.WARN("This's warn message")
-	logger.ERROR("this's error message")
-	logger.SERIOUS("this's serious message")
+
+    logger:=logger.NewLogByJsonFile("./config.yaml")
+    logger.DEBUG("This's debug message")
+    logger.INFO("This's info message")
+    logger.WARN("This's warn message")
+    logger.ERROR("this's error message")
+    logger.SERIOUS("this's serious message")
   
 }
 ```
 
-#### json文件的配置
+#### yaml文件的配置
 
-```json
-{
-  "logger": {
-    "color": true,              //开启颜色,windows请关闭
-    "save_path": "./app.log",   //保存日志的路径
-    "file_cording": true,       //是否开启文件记录
-    "level": "DEBUG",           //日志的等级
-    "identifier": "$",          //打印消息的标示符
-    "time_format": "2006-01-02 15:04:05"   //你喜欢的时间格式
-  }
-}
+```yaml
+color: true
+filecording: true
+savepath: ./app.log
+level: DBUG
+identifier: $
+timeformat: "2006-01-02 15:04:05"
 
 ```
 
@@ -108,9 +102,9 @@ import "github.com/eliot-jay/logger"
 import "fmt"
 
 func main()  {
-	logger := logger.DefaultLogger(false)
+	logger := logger.DefaultLogger()
   //上传到 云 或者数据库的 接口
-	logger.ReceiveLog(func( string) {
+	logger.ReceiveLog(func(string) {
 		fmt.Println("receive: ",)
 	})
 	

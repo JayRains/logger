@@ -1,0 +1,9 @@
+2020-06-28 23:59:13 [DBUG] logger_test.go:10 $: hello debug
+2020-06-28 23:59:13 [INFO] logger_test.go:11 $: hello info
+2020-06-28 23:59:13 [ERRO] logger_test.go:12 $: hello error
+2020-06-28 23:59:13 [WARN] logger_test.go:13 $: hello warn
+2020-06-29 00:05:14 [DBUG] logger_test.go:10 $: hello debug
+2020-06-29 00:05:14 [INFO] logger_test.go:11 $: hello info
+2020-06-29 00:05:14 [ERRO] logger_test.go:12 $: hello error
+2020-06-29 00:05:14 [WARN] logger_test.go:13 $: hello warn
+2020-06-29 00:05:14 [SERI] logger_test.go:14 $: hello serious

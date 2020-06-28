@@ -1,12 +1,10 @@
 package logger
 
 import (
-	"encoding/json"
 	"fmt"
-	"github.com/eliot-jay/logger/model"
+	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
-	"reflect"
 	"runtime"
 	"strconv"
 	"strings"
@@ -14,71 +12,27 @@ import (
 )
 
 
-func (l *Logger) config(path string) (*model.Logger, error) {
-	defer func() {
-		fatal := recover()
-		if fatal != nil {
-			l.SERIOUS(err)
-		}
-	}()
-	file, err := os.Open(path)
-	if err != nil {
-		return nil, err
+func (l *Logger) decode(path string) Console{
+	yamlFile ,err := ioutil.ReadFile(path)
+	if err!=nil{
+		l.SERIOUS("Open Config File Filed")
+		return nil
 	}
-	defer file.Close()
-
-	//start decode json config
-	var decode map[string]interface{}
-	data, err := ioutil.ReadAll(file)
-	if err != nil {
-		return nil, err
-	}
-	err = json.Unmarshal(data, &decode)
-	if err != nil {
-		return nil, err
+	if err =  yaml.Unmarshal(yamlFile, l);err!=nil{
+		l.SERIOUS("Unmarshal Yaml of File Filed")
+		return nil
 	}
 
-	var set model.Logger
-	l.decode(decode, reflect.TypeOf(&set), reflect.ValueOf(&set))
-	return &set, nil
+	l.writeFile()
+
+	return  l
+
 }
 
-func (l *Logger) decode(obj interface{}, rType reflect.Type, rValue reflect.Value) {
-	rObj := reflect.ValueOf(obj)
-	OneKey := rObj.MapKeys()
 
-	for _, k := range OneKey {
-		TowKey := rObj.MapIndex(k).Interface().(map[string]interface{})
-
-		rvalue1 := reflect.ValueOf(TowKey)
-		//take two key
-		OkTowKey := rvalue1.MapKeys()
-
-		for _, k1 := range OkTowKey {
-			for i := 0; i < rValue.Elem().NumField(); i++ {
-				if rType.Elem().Field(i).Tag.Get("json") == k1.String() {
-
-					switch rType.Elem().Field(i).Type.Kind() {
-					case reflect.String:
-						rValue.Elem().Field(i).SetString(rvalue1.MapIndex(k1).Interface().(string))
-					case reflect.Bool:
-						rValue.Elem().Field(i).SetBool(rvalue1.MapIndex(k1).Interface().(bool))
-					case reflect.Int64:
-						rValue.Elem().Field(i).SetInt(int64(rvalue1.MapIndex(k1).Interface().(float64)))
-					}
-
-				}
-			}
-
-		}
-	}
-}
-
-/*
-check log level . current configure  level greater than  print level then print
-*/
+// check log level . current configure  level greater than  print level then print
 func (l *Logger) state(level string, f interface{}, v ...interface{}) {
-	if levelInt[l.level] >= levelInt[level] {
+	if levelInt[l.Level] >= levelInt[level] {
 		l.lock.Lock()
 		l.msg = formatLog(f, v...)
 		l.handleText(level)
@@ -96,10 +50,10 @@ func (l *Logger) handleText(level string) {
 		l.retrieveFunc(l.intactLog)
 	}
 	// open file cording
-	if l.fileCording {
+	if l.FileCording {
 		writeDisk <- l.intactLog
 	}
-	if l.color {
+	if l.Color {
 		l.printRow(l.handlerColor(level))
 	} else {
 		l.printRow(strings.Split(l.intactLog,"\n")[0])
@@ -108,11 +62,11 @@ func (l *Logger) handleText(level string) {
 }
 
 func (l *Logger) handlerColor(level string) string {
-	return fmt.Sprintf("%v %v %v", colors[levelInt[level]](l.when), colors[levelInt[underline]](l.path), l.identifier+": "+colors[levelInt[level]](l.msg))
+	return fmt.Sprintf("%v %v %v", colors[levelInt[level]](l.when), colors[levelInt[underline]](l.path), l.Identifier+": "+colors[levelInt[level]](l.msg))
 }
 
 func (l *Logger) nowTime(level string) string {
-	return fmt.Sprintf("%v [%s]", time.Now().Format(l.timeFormat), level)
+	return fmt.Sprintf("%v [%s]", time.Now().Format(l.TimeFormat), level)
 }
 
 func (l *Logger) printRow(msg string) {
@@ -122,7 +76,7 @@ func (l *Logger) printRow(msg string) {
 }
 
 func (l *Logger) intactLogger() {
-	l.intactLog = fmt.Sprintf("%v %v %v\n", l.when, l.path, l.identifier+": "+l.msg)
+	l.intactLog = fmt.Sprintf("%v %v %v\n", l.when, l.path, l.Identifier+": "+l.msg)
 }
 
 func (l *Logger) WithLogMiddleware(handle handlerLog) {
@@ -130,16 +84,19 @@ func (l *Logger) WithLogMiddleware(handle handlerLog) {
 }
 
 func (l *Logger) writeFile() {
-	if l.fileCording {
+	if l.FileCording {
 		go func() {
-			write, err := os.OpenFile(l.fileName, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+			write, err := os.OpenFile(l.SavePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
 			if err != nil {
 				l.SERIOUS("Creat log file Failed")
 				return
 			}
 			defer write.Close()
 			for {
-				_, _ = write.WriteString(<-writeDisk)
+				if _, err = write.WriteString(<-writeDisk);err!=nil{
+					l.SERIOUS(err)
+					break
+				}
 			}
 		}()
 	}

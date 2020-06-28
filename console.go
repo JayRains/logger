@@ -1,14 +1,11 @@
 package logger
 
 import (
-	"github.com/eliot-jay/logger/model"
-	"reflect"
 	"runtime"
 	"sync"
 )
 
 /*	all time format
-
 	ANSIC       	"Mon Jan _2 15:04:05 2006"
 	UnixDate		"Mon Jan _2 15:04:05 MST 2006"
 	RubyDate		"Mon Jan 02 15:04:05 -0700 2006"
@@ -26,24 +23,10 @@ import (
 	StampNano		"Jan _2 15:04:05.000000000"
 	RFC3339Nano1	"2006-01-02 15:04:05.999999999 -0700 MST"
 	DEFAULT			"2006-01-02 15:04:05"
-
-	json config
-		{
-	  "log": {
-		"file_name": "app.log",
-		"file_cording": true,
-		"level": "DEBUG",
-		"identifier": "$",
-		"time_format": "2006-01-02 15:04:05"
-	  }
-	}
-
-
 */
 
 type Console interface {
-	config(string) (*model.Logger, error)
-	decode(interface{}, reflect.Type, reflect.Value)
+	decode(path string) Console
 	DEBUG(f interface{}, v ...interface{})
 	INFO(f interface{}, v ...interface{})
 	WARN(f interface{}, v ...interface{})
@@ -53,14 +36,16 @@ type Console interface {
 
 
 type Logger struct {
-	color        bool
-	lock         *sync.Mutex
-	fileName     string
-	level        string
-	identifier   string
-	timeFormat   string
-	fileCording  bool
+	Color        bool `yaml:"color"`
+	SavePath     string `yaml:"savepath"`
+	Level        string `yaml:"level"`
+	Identifier   string `yaml:"identifier"`
+	TimeFormat   string `yaml:"timeformat"`
+	FileCording  bool `yaml:"filecording"`
+
+
 	retrieveFunc handlerLog
+	lock         *sync.Mutex
 	logInfo
 }
 
@@ -96,43 +81,30 @@ func (l *Logger) SERIOUS(f interface{}, v ...interface{}) {
 }
 
 
-func NewLogger(level, identifier, timeFormat, savePath string, fileCording bool, color bool) *Logger {
+func NewLogger(Level, Identifier, TimeFormat, savePath string, FileCording bool, Color bool) *Logger {
 	log := &Logger{
 		lock:        &sync.Mutex{},
-		level:       level,
-		identifier:  identifier,
-		timeFormat:  timeFormat,
-		fileCording: fileCording,
-		fileName:    savePath,
-		color:       color,
+		Level:       Level,
+		Identifier:  Identifier,
+		TimeFormat:  TimeFormat,
+		FileCording: FileCording,
+		SavePath:    savePath,
+		Color:       Color,
 	}
-	if log.fileCording {
-		log.writeFile()
-	}
+	log.writeFile()
 	return log
 }
 
-func NewLogByJsonFile(JsonPath string) (Console, error) {
-	old := Logger{}
-	set, _ := old.config(JsonPath)
-	return NewLogger(
-		set.Level,
-		set.Identifier,
-		set.TimeFormat,
-		set.SavePath,
-		set.FileCording,
-		set.OpenColor,
-	), nil
-
+func NewLogByConfigFile(Path string) Console {
+	return NewLogger("","","","",false,false).decode(Path)
 }
 
-// windows system please close color
+// windows system please close Color
 func DefaultLogger()Console{
 	const (
 		linux = "linux"
 		systemType = runtime.GOOS
 	)
-
 
 	l := NewLogger(
 		"DBUG",
@@ -143,12 +115,11 @@ func DefaultLogger()Console{
 		true,
 	)
 
-
 	if systemType == linux{
 		return l
 	}
-	l.color = false
-	l.INFO("Windows Please Off Color for False")
+	l.Color = false
+	l.INFO("Windows Please Off Color Switch")
 	return l
 
 }

@@ -1,0 +1,8 @@
+
+
+color: true
+filecording: true
+savepath: ./app.log
+level: DBUG
+identifier: $
+timeformat: "2006-01-02 15:04:05"
