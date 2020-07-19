@@ -1,14 +1,13 @@
 ## logger 简介 
 
-当前版本只支持 linux 系统使用 , 后续可能会支持Windows 
+支持 linux 系统使用 , Windows 需要关闭颜色
 
 支持追加方式写入文件 , 保持到磁盘
 
-提供日志处理接口用于: `上传到云`或者`存储到数据库`
+可以监视日志文件的大小 , 自动建立新的日志文件 , 默认最大存储 1M 
 
 在`goland` IDE 中可快速定为到打印的行数
 
-部分代码参考了其他[Github项目](<https://github.com/wonderivan/logger>)
 
 ## 安装
 
@@ -18,11 +17,12 @@ go get github.com/eliot-jay/logger
 
 ##	日志的等级:
 
-一共有五个等级 , `打印时的等级要等于或者小于配置的等级时`才会输出消息
+一共有六个等级 , `打印时的等级要等于或者小于配置的等级时`才会输出消息
 
 | 等级 | 配置 | 释义                                             | 控制台颜色 |
 | ---- | ---- | ------------------------------------------------ | :--------: |
 | 0    | SERI |可能有危险的严重错误,如:初始化,数据库连接错误等 |红色底|
+| 0    | Fatal | 致命错误,将会停止程序 |红色底|
 | 1    | ERRO |普通错误,断言失败,类型转换失败等   						 |红色|
 | 2    | WARN | 普通警告，比如权限出错，访问异常等               |紫色底|
 | 3    | INFO | 重要消息                   									 |蓝色 |
@@ -52,12 +52,13 @@ import "github.com/eliot-jay/logger"
 
 func main () {
 
-    logger := DefaultLogger()
-    logger.DEBUG("hello debug")
-    logger.INFO("hello info")
-    logger.ERROR("hello error")
-    logger.WARN("hello warn")
-    logger.SERIOUS("hello serious")
+	log := register.NewDefaultLogger()
+	defer log.Destroy()
+	log.Debug("hello world")
+	log.Info("Info")
+	log.Warn("Warn")
+	log.Error("Error")
+	log.Serious("Serious")
   
 }
 ```
@@ -70,52 +71,37 @@ package main
 import "github.com/eliot-jay/logger"
 
 func main() {
-
-    logger:=logger.NewLogByJsonFile("./config.yaml")
-    logger.DEBUG("This's debug message")
-    logger.INFO("This's info message")
-    logger.WARN("This's warn message")
-    logger.ERROR("this's error message")
-    logger.SERIOUS("this's serious message")
-  
+	log ,err := register.NewLogger("./config.yaml")
+	if err!=nil{
+		panic(err)
+	}
+	defer log.Destroy()
+	log.Debug("hello world")
+	log.Info("Info")
+	log.Warn("Warn")
+	log.Error("Error")
+	log.Serious("Serious")  
 }
 ```
 
 #### yaml文件的配置
 
 ```yaml
-color: true
-filecording: true
-savepath: ./app.log
-level: DBUG
-identifier: $
-timeformat: "2006-01-02 15:04:05"
+# 日志打印的配置
+loggerConfigure:
+  level: "DBUG"    # 日志的等级: debug , info , warn , error , serious , fatal
+  on-color: true   # 开启颜色
+  on-write: true   # 开启日志文件记录
+  on-console: true  # 开启控制台打印
+  max-size: 1       # 日志文件最大存储的大小  单位: 1M
+  identifier: ""    # 日志输出的标识符
+
+  normal-file: "./logs/project.inf.1.log" # 正常日志的保存路径
+  error-file: "./logs/project.err.1.log"  # 错误日志的保存路径
+  time-format: "2006-01-02 15:04:05"      # 日志的时间格式
 
 ```
 
-## 接收打印时的消息
-
-```go
-package main
-
-import "github.com/eliot-jay/logger"
-import "fmt"
-
-func main()  {
-	logger := logger.DefaultLogger()
-  //上传到 云 或者数据库的 接口
-	logger.ReceiveLog(func(string) {
-		fmt.Println("receive: ",)
-	})
-	
-	logger.DEBUG("hello debug")
-	logger.INFO("hello info")
-	logger.ERROR("hello error")
-	logger.WARN("hello warn")
-	logger.SERIOUS("hello serious")
-}
-
-```
 
 ##	支持的时间格式
 

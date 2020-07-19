@@ -1,0 +1,14 @@
+
+
+# 日志打印的配置
+loggerConfigure:
+  level: "DBUG"    # 日志的等级: debug , info , warn , error , serious , fatal
+  on-color: true  # 开启颜色
+  on-write: true  # 开启日志文件记录
+  on-console: true  # 开启控制台打印
+  max-size: 1       # 日志文件最大存储的大小  单位: 1M
+  identifier: ""    # 日志输出的标识符
+
+  normal-file: "./logs/project.inf.1.log" # 正常日志的保存路径
+  error-file: "./logs/project.err.1.log"  # 错误日志的保存路径
+  time-format: "2006-01-02 15:04:05"      # 日志的时间格式
