@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"fmt"
 	"github.com/eliot-jay/logger/public"
 	"github.com/eliot-jay/logger/register"
 	"testing"
@@ -11,11 +12,9 @@ var (
 )
 
 func TestNewLogger(t *testing.T) {
-	log ,err := register.NewLogger("./config.yaml")
-	if err!=nil{
-		panic(err)
-	}
+	log := register.NewDefaultLogger()
 	defer log.Destroy()
+	fmt.Println(log.Sprint("hello world").Text())
 	log.Debug("hello world")
 	log.Info("Info")
 	log.Warn("Warn")

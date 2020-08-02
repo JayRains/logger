@@ -41,9 +41,11 @@ func (r *LoggerRegister) Fatal(f interface{}, a ...interface{}) {
 	r.log.Fatal(f,a...)
 }
 
-func (r *LoggerRegister) Sprint(f interface{}, a ...interface{}) *model.Logger {
-	return r.log.Sprint(f,a...)
+func (r *LoggerRegister) Sprint(Type string,f interface{}, a ...interface{}) *model.Logger {
+	return r.log.Sprint(Type,f,a...)
 }
+
+
 
 
 func (r *LoggerRegister)defaultLoggerRegister() *LoggerRegister {

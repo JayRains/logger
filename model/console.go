@@ -23,12 +23,8 @@ type LoggerOutPut interface {
 	Error(f interface{}, a ...interface{})
 	Serious(f interface{}, a ...interface{})
 	Fatal(f interface{}, a ...interface{})
-	Sprint(f interface{}, a ...interface{}) *Logger
 	Destroy()
 }
-
-
-
 
 type LoggerConfigure struct {
 	OnConsole    bool   `yaml:"on-console"`
@@ -97,15 +93,16 @@ func (log *Logger) Fatal(f interface{}, a ...interface{}) {
 	log.levelInspector(public.FATAL, f, a...)
 }
 
-func (log *Logger) Sprint(f interface{}, a ...interface{}) *Logger{
-	log.OnConsole = false
-	defer func() {
-		log.OnConsole = true
-	}()
-	log.levelInspector(public.Sprint, f, a...)
+func (log *Logger) Sprint(Type string,f interface{}, a ...interface{}) *Logger {
+	if log.OnConsole {
+		log.OnConsole = false
+		defer func() {
+			log.OnConsole = true
+		}()
+	}
+	log.levelInspector(Type, f, a...)
 	return log
 }
-
 
 
 func (log *Logger) writInspector(level string) {
@@ -133,12 +130,12 @@ func (log *Logger) openFile() bool {
 }
 
 func (log *Logger) write(level string) {
-		log.FileSizeInspector()
-		if level == public.ERRNO || level == public.SERIOUS || level == public.FATAL{
-			public.ErrnoWrite.WriteString(fmt.Sprintf("%v TraceID: %v \n",log.Text(),log.TraceID))
-		} else {
-			public.NormalWrite.WriteString(fmt.Sprintf("%v TraceID: %v \n",log.Text(),log.TraceID))
-		}
+	log.FileSizeInspector()
+	if level == public.ERRNO || level == public.SERIOUS || level == public.FATAL {
+		public.ErrnoWrite.WriteString(fmt.Sprintf("%v TraceID: %v \n", log.Text(), log.TraceID))
+	} else {
+		public.NormalWrite.WriteString(fmt.Sprintf("%v TraceID: %v \n", log.Text(), log.TraceID))
+	}
 }
 
 func (log *Logger) FileSizeInspector() {
@@ -147,7 +144,7 @@ func (log *Logger) FileSizeInspector() {
 	normal := (normalInfo.Size()/1024)/1024 >= log.MaxSize
 	errno := (errnoInfo.Size()/1024)/1024 >= log.MaxSize
 	if normal || errno {
-		atomic.AddInt64(&public.FileCount,1)
+		atomic.AddInt64(&public.FileCount, 1)
 		newSuffix := "." + strconv.Itoa(int(public.FileCount)) + ".log"
 		re := regexp.MustCompile("\\.[0-9]+.*?log")
 		if normal {
@@ -214,7 +211,7 @@ func (log *Logger) printRow(level string) {
 		os.Stdout.Write(append([]byte(log.colorBrush(level)), '\n'))
 		return
 	}
-	os.Stdout.Write(append([]byte(log.Text()),'\n'))
+	os.Stdout.Write(append([]byte(log.Text()), '\n'))
 }
 
 func (log *Logger) colorBrush(level string) string {
@@ -232,7 +229,7 @@ func (log *Logger) Text() string {
 	return fmt.Sprintf("%v %v %v", log.NowTime, log.FilePath, log.Identifier+": "+log.Msg)
 }
 
-func (log *Logger)Destroy()  {
+func (log *Logger) Destroy() {
 	public.NormalWrite.Close()
 	public.ErrnoWrite.Close()
 }
