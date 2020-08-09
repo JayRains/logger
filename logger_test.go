@@ -13,7 +13,7 @@ var (
 
 func TestNewLogger(t *testing.T) {
 
-	log := register.NewDefaultLogger()
+	log ,_ := register.NewLoggerBy("./conf/logger.yaml")
 	defer log.Destroy()
 	fmt.Println(log.Sprint("warn", "hello world").Text())
 	log.Debug("hello world")
@@ -21,5 +21,4 @@ func TestNewLogger(t *testing.T) {
 	log.Warn("Warn")
 	log.Error("Error")
 	log.Serious("Serious")
-
 }

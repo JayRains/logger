@@ -11,3 +11,5 @@ const (
 	Linux     = "linux"
 	Skip      = 5
 )
+
+const Trace  = "|| Track"

@@ -94,7 +94,7 @@ func GenTraceID() string {
 	// 纳秒随机数种子时间
 	rand.Seed(nano)
 	randomNum := rand.Int()
-	// 不断变化的pid
+	// 变化的pid
 	pid := os.Getpid()
 	// cpu 的使用率
 	percent, _ := cpu.Percent(time.Nanosecond, false)
@@ -108,6 +108,6 @@ func GenTraceID() string {
 	base += MemoryUsedPercent + CpuUsedPercent
 	hash := sha1.New()
 	hash.Write([]byte(base))
-	b.WriteString(fmt.Sprintf("%x", hash.Sum(nil)))
+	b.WriteString(fmt.Sprintf("%x ", hash.Sum(nil)))
 	return b.String()
 }

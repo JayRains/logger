@@ -14,24 +14,24 @@ func NewLoggerBy(yamlPath string) (*LoggerRegister, error) {
 	return log.newLoggerRegister(yamlPath)
 }
 
-func (r *LoggerRegister) Debug(f interface{}, a ...interface{}) {
-	r.log.Debug(f, a...)
+func (r *LoggerRegister) Debug(f interface{}, a ...interface{}) string {
+	return r.log.Debug(f, a...)
 }
 
-func (r *LoggerRegister) Info(f interface{}, a ...interface{}) {
-	r.log.Info(f, a...)
+func (r *LoggerRegister) Info(f interface{}, a ...interface{}) string{
+	return r.log.Info(f, a...)
 }
 
-func (r *LoggerRegister) Warn(f interface{}, a ...interface{}) {
-	r.log.Warn(f, a...)
+func (r *LoggerRegister) Warn(f interface{}, a ...interface{}) string{
+	return r.log.Warn(f, a...)
 }
 
-func (r *LoggerRegister) Error(f interface{}, a ...interface{}) {
-	r.log.Error(f, a...)
+func (r *LoggerRegister) Error(f interface{}, a ...interface{}) string{
+	return r.log.Error(f, a...)
 }
 
-func (r *LoggerRegister) Serious(f interface{}, a ...interface{}) {
-	r.log.Serious(f, a...)
+func (r *LoggerRegister) Serious(f interface{}, a ...interface{})string {
+	return r.log.Serious(f, a...)
 }
 
 func (r *LoggerRegister) Fatal(f interface{}, a ...interface{}) {

@@ -16,11 +16,11 @@ import (
 )
 
 type Logger interface {
-	Debug(f interface{}, a ...interface{})
-	Info(f interface{}, a ...interface{})
-	Warn(f interface{}, a ...interface{})
-	Error(f interface{}, a ...interface{})
-	Serious(f interface{}, a ...interface{})
+	Debug(f interface{}, a ...interface{}) string
+	Info(f interface{}, a ...interface{}) string
+	Warn(f interface{}, a ...interface{}) string
+	Error(f interface{}, a ...interface{}) string
+	Serious(f interface{}, a ...interface{}) string
 	Fatal(f interface{}, a ...interface{})
 	Sprint(Type string, f interface{}, a ...interface{}) *logger
 	Destroy()
@@ -41,6 +41,7 @@ type LoggerConfigure struct {
 type logger struct {
 	lock            *sync.RWMutex
 	FilePath        string
+	TraceID    		string
 	NowTime         string
 	Msg             string
 	LoggerConfigure `yaml:"loggerConfigure"`
@@ -68,31 +69,43 @@ loggerConfigure:
 	return log
 }
 
-func (log *logger) Debug(f interface{}, a ...interface{}) {
+func (log *logger) Debug(f interface{}, a ...interface{})string{
+	defer log.lock.Unlock()
 	log.levelInspector(public.DEBUG, f, a...)
+	return log.TraceID
 }
 
-func (log *logger) Info(f interface{}, a ...interface{}) {
+func (log *logger) Info(f interface{}, a ...interface{})string{
+	defer log.lock.Unlock()
 	log.levelInspector(public.INFO, f, a...)
+	return log.TraceID
 }
 
-func (log *logger) Warn(f interface{}, a ...interface{}) {
+func (log *logger) Warn(f interface{}, a ...interface{})string{
+	defer log.lock.Unlock()
 	log.levelInspector(public.WARN, f, a...)
+	return log.TraceID
 }
 
-func (log *logger) Error(f interface{}, a ...interface{}) {
+func (log *logger) Error(f interface{}, a ...interface{})string{
+	defer log.lock.Unlock()
 	log.levelInspector(public.ERRNO, f, a...)
+	return log.TraceID
 }
 
-func (log *logger) Serious(f interface{}, a ...interface{}) {
+func (log *logger) Serious(f interface{}, a ...interface{})string {
+	defer log.lock.Unlock()
 	log.levelInspector(public.SERIOUS, f, a...)
+	return log.TraceID
 }
-func (log *logger) Fatal(f interface{}, a ...interface{}) {
+func (log *logger) Fatal(f interface{}, a ...interface{})  {
 	defer os.Exit(0)
+	defer log.lock.Unlock()
 	log.levelInspector(public.FATAL, f, a...)
 }
 
 func (log *logger) Sprint(Type string, f interface{}, a ...interface{}) *logger {
+	defer log.lock.Unlock()
 	if log.OnConsole {
 		log.OnConsole = false
 		defer func() {
@@ -112,9 +125,9 @@ func (log *logger) writInspector(level string) {
 
 func (log *logger) write(level string) {
 	if level == public.ERRNO || level == public.SERIOUS || level == public.FATAL {
-		public.ErrnoWrite.WriteString(fmt.Sprintf("%v \n", log.Text()))
+		public.ErrnoWrite.WriteString(fmt.Sprintf("%v %v: %v \n", log.Text(),public.Trace,log.TraceID))
 	} else {
-		public.NormalWrite.WriteString(fmt.Sprintf("%v \n", log.Text()))
+		public.NormalWrite.WriteString(fmt.Sprintf("%v %v: %v \n", log.Text(),public.Trace,log.TraceID))
 	}
 }
 
@@ -201,17 +214,18 @@ func (log *logger) ShouldBind(PathOrYaml interface{}) (l *logger, err error) {
 }
 
 func (log *logger) levelInspector(level string, f interface{}, a ...interface{}) {
-	log.lock.RLock()
+	log.lock.Lock()
 	if public.GlobalLevelInt[log.Level] >= public.GlobalLevelInt[level] {
 		log.Msg = public.Format(f, a...)
 		log.NowTime = fmt.Sprintf("%v [%s]", time.Now().Format(log.TimeFormat), level)
 		log.FilePath = public.FilePath() // current print log the file path
+		log.TraceID = public.GenTraceID()
 		log.writInspector(level)
 		if log.OnConsole {
 			log.printRow(level)
 		}
 	}
-	log.lock.RUnlock()
+
 }
 
 func (log *logger) printRow(level string) {
