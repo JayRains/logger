@@ -1,4 +1,4 @@
-package model
+package register
 
 import (
 	"errors"
@@ -7,7 +7,6 @@ import (
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
-	"regexp"
 	"runtime"
 	"strconv"
 	"strings"
@@ -16,39 +15,39 @@ import (
 	"time"
 )
 
-type LoggerOutPut interface {
+type Logger interface {
 	Debug(f interface{}, a ...interface{})
 	Info(f interface{}, a ...interface{})
 	Warn(f interface{}, a ...interface{})
 	Error(f interface{}, a ...interface{})
 	Serious(f interface{}, a ...interface{})
 	Fatal(f interface{}, a ...interface{})
+	Sprint(Type string, f interface{}, a ...interface{}) *logger
 	Destroy()
 }
 
 type LoggerConfigure struct {
-	OnConsole    bool   `yaml:"on-console"`
-	OnColor      bool   `yaml:"on-color"`
-	OnWrite      bool   `yaml:"on-write"`
-	LoggerNormal string `yaml:"normal-file"`
-	LoggerError  string `yaml:"error-file"`
-	Level        string `yaml:"level"`
-	Identifier   string `yaml:"identifier"`
-	TimeFormat   string `yaml:"time-format"`
-	MaxSize      int64  `yaml:"max-size"`
+	OnConsole    bool    `yaml:"on-console"`
+	OnColor      bool    `yaml:"on-color"`
+	OnWrite      bool    `yaml:"on-write"`
+	LoggerNormal string  `yaml:"normal-file"`
+	LoggerError  string  `yaml:"error-file"`
+	Level        string  `yaml:"level"`
+	Identifier   string  `yaml:"identifier"`
+	TimeFormat   string  `yaml:"time-format"`
+	MaxSize      float64 `yaml:"max-size"`
 }
 
-type Logger struct {
-	lock            *sync.Mutex
-	TraceID         string
+type logger struct {
+	lock            *sync.RWMutex
 	FilePath        string
 	NowTime         string
 	Msg             string
 	LoggerConfigure `yaml:"loggerConfigure"`
 }
 
-func NewDefaultLogger() (log *Logger) {
-	log = &Logger{lock: &sync.Mutex{}}
+func newDefaultLogger() (log *logger) {
+	log = &logger{lock: &sync.RWMutex{}}
 	config := `
 loggerConfigure:
   on-color: true  
@@ -69,31 +68,31 @@ loggerConfigure:
 	return log
 }
 
-func (log *Logger) Debug(f interface{}, a ...interface{}) {
+func (log *logger) Debug(f interface{}, a ...interface{}) {
 	log.levelInspector(public.DEBUG, f, a...)
 }
 
-func (log *Logger) Info(f interface{}, a ...interface{}) {
+func (log *logger) Info(f interface{}, a ...interface{}) {
 	log.levelInspector(public.INFO, f, a...)
 }
 
-func (log *Logger) Warn(f interface{}, a ...interface{}) {
+func (log *logger) Warn(f interface{}, a ...interface{}) {
 	log.levelInspector(public.WARN, f, a...)
 }
 
-func (log *Logger) Error(f interface{}, a ...interface{}) {
+func (log *logger) Error(f interface{}, a ...interface{}) {
 	log.levelInspector(public.ERRNO, f, a...)
 }
 
-func (log *Logger) Serious(f interface{}, a ...interface{}) {
+func (log *logger) Serious(f interface{}, a ...interface{}) {
 	log.levelInspector(public.SERIOUS, f, a...)
 }
-func (log *Logger) Fatal(f interface{}, a ...interface{}) {
+func (log *logger) Fatal(f interface{}, a ...interface{}) {
 	defer os.Exit(0)
 	log.levelInspector(public.FATAL, f, a...)
 }
 
-func (log *Logger) Sprint(Type string,f interface{}, a ...interface{}) *Logger {
+func (log *logger) Sprint(Type string, f interface{}, a ...interface{}) *logger {
 	if log.OnConsole {
 		log.OnConsole = false
 		defer func() {
@@ -104,72 +103,82 @@ func (log *Logger) Sprint(Type string,f interface{}, a ...interface{}) *Logger {
 	return log
 }
 
-
-func (log *Logger) writInspector(level string) {
+func (log *logger) writInspector(level string) {
+	log.FileSizeInspector()
 	if log.OnWrite {
-		if log.openFile() {
-			log.write(level)
-		}
-
+		log.write(level)
 	}
 }
 
-func (log *Logger) openFile() bool {
-	if public.Once {
-		public.Once = false
+func (log *logger) write(level string) {
+	if level == public.ERRNO || level == public.SERIOUS || level == public.FATAL {
+		public.ErrnoWrite.WriteString(fmt.Sprintf("%v \n", log.Text()))
+	} else {
+		public.NormalWrite.WriteString(fmt.Sprintf("%v \n", log.Text()))
+	}
+}
+
+// logger file size compare
+func (log *logger) FileSizeInspector() {
+	if !log.OnWrite {
+		return
+	}
+	public.Once.Do(func() {
 		var err error
 		public.NormalWrite, err = os.OpenFile(log.LoggerNormal, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
 		public.ErrnoWrite, err = os.OpenFile(log.LoggerError, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
 		if err != nil {
 			log.Fatal("Open logger File failure: %v", err)
-			return false
 		}
+	})
 
-	}
-	return true
-}
-
-func (log *Logger) write(level string) {
-	log.FileSizeInspector()
-	if level == public.ERRNO || level == public.SERIOUS || level == public.FATAL {
-		public.ErrnoWrite.WriteString(fmt.Sprintf("%v TraceID: %v \n", log.Text(), log.TraceID))
-	} else {
-		public.NormalWrite.WriteString(fmt.Sprintf("%v TraceID: %v \n", log.Text(), log.TraceID))
-	}
-}
-
-func (log *Logger) FileSizeInspector() {
-	normalInfo, _ := public.NormalWrite.Stat()
-	errnoInfo, _ := public.ErrnoWrite.Stat()
-	normal := (normalInfo.Size()/1024)/1024 >= log.MaxSize
-	errno := (errnoInfo.Size()/1024)/1024 >= log.MaxSize
+	var (
+		err        error
+		normalInfo os.FileInfo
+		errnoInfo  os.FileInfo
+	)
+	// 1. get normal and error  logger of file info
+	normalInfo, err = public.NormalWrite.Stat()
+	errnoInfo, err = public.ErrnoWrite.Stat()
+	// 2. compare size
+	normal := (float64(normalInfo.Size()/1024) / 1024) >= log.MaxSize
+	errno := (float64(errnoInfo.Size()/1024) / 1024) >= log.MaxSize
 	if normal || errno {
-		atomic.AddInt64(&public.FileCount, 1)
-		newSuffix := "." + strconv.Itoa(int(public.FileCount)) + ".log"
-		re := regexp.MustCompile("\\.[0-9]+.*?log")
 		if normal {
-			oldStr := re.FindString(log.LoggerNormal)
+			atomic.AddUint32(&public.NormalFileCount, 1)
+			newSuffix := "." + strconv.Itoa(int(public.NormalFileCount)) + ".log"
+			oldStr := public.GlobalRe.FindString(log.LoggerNormal)
 			if oldStr == "" {
 				oldStr = ".log"
 			}
 			public.NormalWrite.Close()
 			log.LoggerNormal = strings.Replace(log.LoggerNormal, oldStr, newSuffix, -1)
-			public.NormalWrite, _ = os.OpenFile(log.LoggerNormal, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+			public.NormalWrite, err = os.OpenFile(log.LoggerNormal, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
 		} else {
-			oldStr := re.FindString(log.LoggerError)
+			atomic.AddUint32(&public.ErrorFileCount, 1)
+			newSuffix := "." + strconv.Itoa(int(public.ErrorFileCount)) + ".log"
+			oldStr := public.GlobalRe.FindString(log.LoggerError)
 			if oldStr == "" {
 				oldStr = ".log"
 			}
 			public.ErrnoWrite.Close()
 			log.LoggerError = strings.Replace(log.LoggerError, oldStr, newSuffix, -1)
-			public.ErrnoWrite, _ = os.OpenFile(log.LoggerError, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+			public.ErrnoWrite, err = os.OpenFile(log.LoggerError, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
 		}
+
+		if err != nil {
+			log.OnWrite = false
+			log.Destroy()
+			log.Serious(err)
+			return
+		}
+		// inspect again
 		log.FileSizeInspector()
 	}
 
 }
 
-func (log *Logger) ShouldBind(PathOrYaml interface{}) (l *Logger, err error) {
+func (log *logger) ShouldBind(PathOrYaml interface{}) (l *logger, err error) {
 	var yamlData []byte
 	switch PathOrYaml.(type) {
 	case string:
@@ -191,22 +200,21 @@ func (log *Logger) ShouldBind(PathOrYaml interface{}) (l *Logger, err error) {
 	}
 }
 
-func (log *Logger) levelInspector(level string, f interface{}, a ...interface{}) {
-	log.lock.Lock()
+func (log *logger) levelInspector(level string, f interface{}, a ...interface{}) {
+	log.lock.RLock()
 	if public.GlobalLevelInt[log.Level] >= public.GlobalLevelInt[level] {
 		log.Msg = public.Format(f, a...)
 		log.NowTime = fmt.Sprintf("%v [%s]", time.Now().Format(log.TimeFormat), level)
-		log.FilePath = public.FilePath()
-		log.TraceID = public.GenTraceID()
+		log.FilePath = public.FilePath() // current print log the file path
 		log.writInspector(level)
 		if log.OnConsole {
 			log.printRow(level)
 		}
 	}
-	log.lock.Unlock()
+	log.lock.RUnlock()
 }
 
-func (log *Logger) printRow(level string) {
+func (log *logger) printRow(level string) {
 	if log.OnColor {
 		os.Stdout.Write(append([]byte(log.colorBrush(level)), '\n'))
 		return
@@ -214,7 +222,7 @@ func (log *Logger) printRow(level string) {
 	os.Stdout.Write(append([]byte(log.Text()), '\n'))
 }
 
-func (log *Logger) colorBrush(level string) string {
+func (log *logger) colorBrush(level string) string {
 	// 1. 获取染色函数
 	brushColor := public.Colors[public.GlobalLevelInt[level]]
 	// 2. 对需要的字符串进行染色
@@ -225,11 +233,11 @@ func (log *Logger) colorBrush(level string) string {
 	return fmt.Sprintf("%v %v %v", nowTime, filePath, msg)
 }
 
-func (log *Logger) Text() string {
+func (log *logger) Text() string {
 	return fmt.Sprintf("%v %v %v", log.NowTime, log.FilePath, log.Identifier+": "+log.Msg)
 }
 
-func (log *Logger) Destroy() {
+func (log *logger) Destroy() {
 	public.NormalWrite.Close()
 	public.ErrnoWrite.Close()
 }

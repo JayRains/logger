@@ -1,6 +1,6 @@
 package public
 
-const (	
+const (
 	DEBUG     = "DBUG"
 	INFO      = "INFO"
 	WARN      = "WARN"
@@ -11,4 +11,3 @@ const (
 	Linux     = "linux"
 	Skip      = 5
 )
-

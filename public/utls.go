@@ -15,8 +15,9 @@ import (
 )
 
 type brush func(string) string
+
 var (
-		Colors = []brush{
+	Colors = []brush{
 		newBrush("1;41"), // Serious              红色底	0
 		newBrush("1;31"), // Error                红色		1
 		newBrush("1;35"), // Warn               紫红底	2
@@ -36,7 +37,6 @@ func init() {
 	GlobalLevelInt[FATAL] = 0
 	GlobalLevelInt[Underline] = 5
 }
-
 
 func newBrush(color string) brush {
 	prefix := "\033[" // \033[ 1; 32m%s  \033[0m
@@ -87,7 +87,7 @@ func FilePath() string {
 	return strings.Replace(frame.File, currentDir+"/", "", -1) + ToString(frame.Line)
 }
 
-func GenTraceID()string{
+func GenTraceID() string {
 	b := bytes.Buffer{}
 	// 纳秒时间
 	nano := time.Now().UnixNano()
@@ -97,7 +97,7 @@ func GenTraceID()string{
 	// 不断变化的pid
 	pid := os.Getpid()
 	// cpu 的使用率
-	percent , _ :=cpu.Percent(time.Nanosecond, false)
+	percent, _ := cpu.Percent(time.Nanosecond, false)
 	// 内存 的使用率
 	v, _ := mem.VirtualMemory()
 	MemoryUsedPercent := fmt.Sprint(v.UsedPercent)
@@ -108,6 +108,6 @@ func GenTraceID()string{
 	base += MemoryUsedPercent + CpuUsedPercent
 	hash := sha1.New()
 	hash.Write([]byte(base))
-	b.WriteString(fmt.Sprintf("%x",hash.Sum(nil)))
+	b.WriteString(fmt.Sprintf("%x", hash.Sum(nil)))
 	return b.String()
 }

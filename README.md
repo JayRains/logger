@@ -71,7 +71,7 @@ package main
 import "github.com/eliot-jay/logger"
 
 func main() {
-	log ,err := register.NewLogger("./config.yaml")
+	log ,err := register.NewLogger("./logger.yaml")
 	if err!=nil{
 		panic(err)
 	}
