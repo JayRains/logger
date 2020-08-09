@@ -106,14 +106,14 @@ func (log *logger) Fatal(f interface{}, a ...interface{})  {
 
 func (log *logger) sPrintf(TractID,Type string, f interface{}, a ...interface{}) string {
 	defer log.lock.Unlock()
-	genTraceID = false
-	log.TraceID = TractID
 	if log.OnConsole {
 		log.OnConsole = false
 		defer func() {
 			log.OnConsole = true
 		}()
 	}
+	genTraceID = false
+	log.TraceID = TractID
 	log.levelInspector(Type, f, a...)
 	genTraceID = true
 	return log.Text()
