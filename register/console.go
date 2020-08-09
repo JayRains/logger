@@ -22,7 +22,7 @@ type Logger interface {
 	Error(f interface{}, a ...interface{}) string
 	Serious(f interface{}, a ...interface{}) string
 	Fatal(f interface{}, a ...interface{})
-	sPrintf(TrackID,Type string, f interface{}, a ...interface{}) string
+	SPrintf(TrackID,Type string, f interface{}, a ...interface{}) string
 	Destroy()
 }
 
@@ -104,7 +104,7 @@ func (log *logger) Fatal(f interface{}, a ...interface{})  {
 	log.levelInspector(public.FATAL, f, a...)
 }
 
-func (log *logger) sPrintf(TractID,Type string, f interface{}, a ...interface{}) string {
+func (log *logger) SPrintf(TractID,Type string, f interface{}, a ...interface{}) string {
 	defer log.lock.Unlock()
 	if log.OnConsole {
 		log.OnConsole = false

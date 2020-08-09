@@ -43,8 +43,8 @@ func (r *LoggerRegister) Fatal(f interface{}, a ...interface{}) {
 
 // self define type field of highest level
 // the type print of non-color
-func (r *LoggerRegister) sPrintf(TractID,Type string, f interface{}, a ...interface{}) string {
-	return r.log.sPrintf(TractID,Type, f, a...)
+func (r *LoggerRegister) SPrintf(TractID,Type string, f interface{}, a ...interface{}) string {
+	return r.log.SPrintf(TractID,Type, f, a...)
 }
 
 
