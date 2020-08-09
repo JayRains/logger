@@ -1,15 +1,18 @@
 package register
 
+var genTraceID = true
+
+
 type LoggerRegister struct {
 	log *logger
 }
 
-func NewDefaultLogger() *LoggerRegister {
+func NewDefaultLogger() Logger {
 	log := &LoggerRegister{}
 	return log.defaultLoggerRegister()
 }
 
-func NewLoggerBy(yamlPath string) (*LoggerRegister, error) {
+func NewLoggerBy(yamlPath string) (Logger, error) {
 	log := &LoggerRegister{}
 	return log.newLoggerRegister(yamlPath)
 }
@@ -40,15 +43,16 @@ func (r *LoggerRegister) Fatal(f interface{}, a ...interface{}) {
 
 // self define type field of highest level
 // the type print of non-color
-func (r *LoggerRegister) Sprint(Type string, f interface{}, a ...interface{}) *logger {
-	return r.log.Sprint(Type, f, a...)
+func (r *LoggerRegister) sPrintf(TractID,Type string, f interface{}, a ...interface{}) string {
+	return r.log.sPrintf(TractID,Type, f, a...)
 }
 
-func (r *LoggerRegister) defaultLoggerRegister() *LoggerRegister {
-	return r.init()
+
+func (r *LoggerRegister) defaultLoggerRegister() Logger {
+    return r.init()
 }
 
-func (r *LoggerRegister) newLoggerRegister(yamlPath string) (l *LoggerRegister, err error) {
+func (r *LoggerRegister) newLoggerRegister(yamlPath string) (l Logger, err error) {
 	r.log, err = r.init().log.ShouldBind(yamlPath)
 	return r, err
 }

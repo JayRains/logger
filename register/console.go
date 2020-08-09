@@ -22,7 +22,7 @@ type Logger interface {
 	Error(f interface{}, a ...interface{}) string
 	Serious(f interface{}, a ...interface{}) string
 	Fatal(f interface{}, a ...interface{})
-	Sprint(Type string, f interface{}, a ...interface{}) *logger
+	sPrintf(TrackID,Type string, f interface{}, a ...interface{}) string
 	Destroy()
 }
 
@@ -104,8 +104,10 @@ func (log *logger) Fatal(f interface{}, a ...interface{})  {
 	log.levelInspector(public.FATAL, f, a...)
 }
 
-func (log *logger) Sprint(Type string, f interface{}, a ...interface{}) *logger {
+func (log *logger) sPrintf(TractID,Type string, f interface{}, a ...interface{}) string {
 	defer log.lock.Unlock()
+	genTraceID = false
+	log.TraceID = TractID
 	if log.OnConsole {
 		log.OnConsole = false
 		defer func() {
@@ -113,7 +115,8 @@ func (log *logger) Sprint(Type string, f interface{}, a ...interface{}) *logger 
 		}()
 	}
 	log.levelInspector(Type, f, a...)
-	return log
+	genTraceID = true
+	return log.Text()
 }
 
 func (log *logger) writInspector(level string) {
@@ -219,7 +222,7 @@ func (log *logger) levelInspector(level string, f interface{}, a ...interface{})
 		log.Msg = public.Format(f, a...)
 		log.NowTime = fmt.Sprintf("%v [%s]", time.Now().Format(log.TimeFormat), level)
 		log.FilePath = public.FilePath() // current print log the file path
-		log.TraceID = public.GenTraceID()
+		if genTraceID {  log.TraceID = public.GenTraceID()  }
 		log.writInspector(level)
 		if log.OnConsole {
 			log.printRow(level)
