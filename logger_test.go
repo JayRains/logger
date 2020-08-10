@@ -2,23 +2,21 @@ package logger
 
 import (
 	"fmt"
-	"github.com/eliot-jay/logger/register"
+	"github.com/eliot-jay/logger/logger"
+	"github.com/eliot-jay/logger/public"
 	"testing"
 )
 
-var (
-	filter = make(map[string]bool)
-	count  = 0
-)
-
 func TestNewLogger(t *testing.T) {
-
-	log ,_ := register.NewLoggerBy("./conf/logger.yaml")
+	log, _ := logger.NewLoggerBy("./conf/logger.yaml")
 	defer log.Destroy()
-	fmt.Println(log.Sprint("warn", "hello world").Text())
-	log.Debug("hello world")
+	log.Debug("debug")
+	fmt.Println(log.SPrintf(public.GenTraceID(), "warn", "hello world"))
 	log.Info("Info")
 	log.Warn("Warn")
+	// close the row print color
 	log.Error("Error")
-	log.Serious("Serious")
+	// close the row write to disk
+	log.Serious("hello world")
+
 }

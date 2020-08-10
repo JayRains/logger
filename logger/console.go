@@ -1,4 +1,4 @@
-package register
+package logger
 
 import (
 	"errors"
@@ -6,6 +6,7 @@ import (
 	"github.com/eliot-jay/logger/public"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
+	"math"
 	"os"
 	"runtime"
 	"strconv"
@@ -22,7 +23,7 @@ type Logger interface {
 	Error(f interface{}, a ...interface{}) string
 	Serious(f interface{}, a ...interface{}) string
 	Fatal(f interface{}, a ...interface{})
-	SPrintf(TrackID,Type string, f interface{}, a ...interface{}) string
+	SPrintf(TrackID, Type string, f interface{}, a ...interface{}) string
 	Destroy()
 }
 
@@ -39,16 +40,19 @@ type LoggerConfigure struct {
 }
 
 type logger struct {
-	lock            *sync.RWMutex
 	FilePath        string
-	TraceID    		string
+	TraceID         string
 	NowTime         string
 	Msg             string
 	LoggerConfigure `yaml:"loggerConfigure"`
+
+	//private
+	lock   *sync.RWMutex
+	option []uint
 }
 
 func newDefaultLogger() (log *logger) {
-	log = &logger{lock: &sync.RWMutex{}}
+	log = &logger{lock: &sync.RWMutex{}, option: make([]uint, 0)}
 	config := `
 loggerConfigure:
   on-color: true  
@@ -69,42 +73,42 @@ loggerConfigure:
 	return log
 }
 
-func (log *logger) Debug(f interface{}, a ...interface{})string{
+func (log *logger) Debug(f interface{}, a ...interface{}) string {
 	defer log.lock.Unlock()
-	log.levelInspector(public.DEBUG, f, a...)
+	log.inspector(public.DEBUG, f, a...)
 	return log.TraceID
 }
 
-func (log *logger) Info(f interface{}, a ...interface{})string{
+func (log *logger) Info(f interface{}, a ...interface{}) string {
 	defer log.lock.Unlock()
-	log.levelInspector(public.INFO, f, a...)
+	log.inspector(public.INFO, f, a...)
 	return log.TraceID
 }
 
-func (log *logger) Warn(f interface{}, a ...interface{})string{
+func (log *logger) Warn(f interface{}, a ...interface{}) string {
 	defer log.lock.Unlock()
-	log.levelInspector(public.WARN, f, a...)
+	log.inspector(public.WARN, f, a...)
 	return log.TraceID
 }
 
-func (log *logger) Error(f interface{}, a ...interface{})string{
+func (log *logger) Error(f interface{}, a ...interface{}) string {
 	defer log.lock.Unlock()
-	log.levelInspector(public.ERRNO, f, a...)
+	log.inspector(public.ERRNO, f, a...)
 	return log.TraceID
 }
 
-func (log *logger) Serious(f interface{}, a ...interface{})string {
+func (log *logger) Serious(f interface{}, a ...interface{}) string {
 	defer log.lock.Unlock()
-	log.levelInspector(public.SERIOUS, f, a...)
+	log.inspector(public.SERIOUS, f, a...)
 	return log.TraceID
 }
-func (log *logger) Fatal(f interface{}, a ...interface{})  {
+func (log *logger) Fatal(f interface{}, a ...interface{}) {
 	defer os.Exit(0)
 	defer log.lock.Unlock()
-	log.levelInspector(public.FATAL, f, a...)
+	log.inspector(public.FATAL, f, a...)
 }
 
-func (log *logger) SPrintf(TractID,Type string, f interface{}, a ...interface{}) string {
+func (log *logger) SPrintf(TractID, Type string, f interface{}, a ...interface{}) string {
 	defer log.lock.Unlock()
 	if log.OnConsole {
 		log.OnConsole = false
@@ -114,30 +118,29 @@ func (log *logger) SPrintf(TractID,Type string, f interface{}, a ...interface{})
 	}
 	genTraceID = false
 	log.TraceID = TractID
-	log.levelInspector(Type, f, a...)
+	log.inspector(Type, f, a...)
 	genTraceID = true
 	return log.Text()
 }
 
 func (log *logger) writInspector(level string) {
-	log.FileSizeInspector()
-	if log.OnWrite {
+	if log.FileSizeInspector() {
 		log.write(level)
 	}
 }
 
 func (log *logger) write(level string) {
 	if level == public.ERRNO || level == public.SERIOUS || level == public.FATAL {
-		public.ErrnoWrite.WriteString(fmt.Sprintf("%v %v: %v \n", log.Text(),public.Trace,log.TraceID))
+		_, _ = public.ErrnoWrite.WriteString(fmt.Sprintf("%v %v: %v \n", log.Text(), public.Trace, log.TraceID))
 	} else {
-		public.NormalWrite.WriteString(fmt.Sprintf("%v %v: %v \n", log.Text(),public.Trace,log.TraceID))
+		_, _ = public.NormalWrite.WriteString(fmt.Sprintf("%v %v: %v \n", log.Text(), public.Trace, log.TraceID))
 	}
 }
 
 // logger file size compare
-func (log *logger) FileSizeInspector() {
+func (log *logger) FileSizeInspector() bool {
 	if !log.OnWrite {
-		return
+		return false
 	}
 	public.Once.Do(func() {
 		var err error
@@ -156,9 +159,16 @@ func (log *logger) FileSizeInspector() {
 	// 1. get normal and error  logger of file info
 	normalInfo, err = public.NormalWrite.Stat()
 	errnoInfo, err = public.ErrnoWrite.Stat()
+	if err != nil {
+		log.OnWrite = false
+		log.Destroy()
+		log.Serious(err)
+		return false
+	}
 	// 2. compare size
-	normal := (float64(normalInfo.Size()/1024) / 1024) >= log.MaxSize
-	errno := (float64(errnoInfo.Size()/1024) / 1024) >= log.MaxSize
+	errno := public.Round(float64(errnoInfo.Size())/math.Pow(1024, 2)) >= log.MaxSize
+	normal := public.Round(float64(normalInfo.Size())/math.Pow(1024, 2)) >= log.MaxSize
+	//fmt.Println(float64(errnoInfo.Size())  / math.Pow(1024,2),log.MaxSize)
 	if normal || errno {
 		if normal {
 			atomic.AddUint32(&public.NormalFileCount, 1)
@@ -186,12 +196,12 @@ func (log *logger) FileSizeInspector() {
 			log.OnWrite = false
 			log.Destroy()
 			log.Serious(err)
-			return
+			return false
 		}
 		// inspect again
 		log.FileSizeInspector()
 	}
-
+	return true
 }
 
 func (log *logger) ShouldBind(PathOrYaml interface{}) (l *logger, err error) {
@@ -216,27 +226,34 @@ func (log *logger) ShouldBind(PathOrYaml interface{}) (l *logger, err error) {
 	}
 }
 
-func (log *logger) levelInspector(level string, f interface{}, a ...interface{}) {
+func (log *logger) inspector(level string, f interface{}, a ...interface{}) {
 	log.lock.Lock()
+	a = log.handleOption(a...)
+	if !log.OnConsole && !log.OnWrite {
+		return
+	}
 	if public.GlobalLevelInt[log.Level] >= public.GlobalLevelInt[level] {
 		log.Msg = public.Format(f, a...)
 		log.NowTime = fmt.Sprintf("%v [%s]", time.Now().Format(log.TimeFormat), level)
-		log.FilePath = public.FilePath() // current print log the file path
-		if genTraceID {  log.TraceID = public.GenTraceID()  }
-		log.writInspector(level)
+		log.FilePath = public.FilePath() // current print log the file path and line
+		if genTraceID {
+			log.TraceID = public.GenTraceID()
+		}
 		if log.OnConsole {
 			log.printRow(level)
 		}
+		log.writInspector(level)
+		log.recoverOption()
 	}
 
 }
 
 func (log *logger) printRow(level string) {
 	if log.OnColor {
-		os.Stdout.Write(append([]byte(log.colorBrush(level)), '\n'))
+		_, _ = os.Stdout.Write(append([]byte(log.colorBrush(level)), '\n'))
 		return
 	}
-	os.Stdout.Write(append([]byte(log.Text()), '\n'))
+	_, _ = os.Stdout.Write(append([]byte(log.Text()), '\n'))
 }
 
 func (log *logger) colorBrush(level string) string {
@@ -252,6 +269,41 @@ func (log *logger) colorBrush(level string) string {
 
 func (log *logger) Text() string {
 	return fmt.Sprintf("%v %v %v", log.NowTime, log.FilePath, log.Identifier+": "+log.Msg)
+}
+
+func (log *logger) handleOption(o ...interface{}) (data []interface{}) {
+	data = make([]interface{}, 0)
+	for _, v := range o {
+		switch v.(type) {
+		case LoggerHandler:
+			if option, ok := v.(LoggerHandler); ok {
+				option(log)
+			}
+		case nil:
+			// nothing todo
+		default:
+			data = append(data, v)
+		}
+	}
+
+	return
+}
+
+func (log *logger) recoverOption() {
+	if len(log.option) == 0 {
+		return
+	}
+	for _, v := range log.option {
+		switch v {
+		case public.CallOffOnWrite:
+			log.OnWrite = true
+		case public.CallOffOnColor:
+			log.OnColor = true
+		case public.CallOffOnConsole:
+			log.OnConsole = true
+		}
+	}
+	log.option = log.option[:0]
 }
 
 func (log *logger) Destroy() {

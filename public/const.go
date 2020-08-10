@@ -12,4 +12,10 @@ const (
 	Skip      = 5
 )
 
-const Trace  = "|| Track"
+const Trace = "|| Track"
+
+const (
+	CallOffOnWrite = iota
+	CallOffOnColor
+	CallOffOnConsole
+)

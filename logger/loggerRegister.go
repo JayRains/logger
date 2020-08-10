@@ -1,7 +1,6 @@
-package register
+package logger
 
 var genTraceID = true
-
 
 type LoggerRegister struct {
 	log *logger
@@ -21,19 +20,19 @@ func (r *LoggerRegister) Debug(f interface{}, a ...interface{}) string {
 	return r.log.Debug(f, a...)
 }
 
-func (r *LoggerRegister) Info(f interface{}, a ...interface{}) string{
+func (r *LoggerRegister) Info(f interface{}, a ...interface{}) string {
 	return r.log.Info(f, a...)
 }
 
-func (r *LoggerRegister) Warn(f interface{}, a ...interface{}) string{
+func (r *LoggerRegister) Warn(f interface{}, a ...interface{}) string {
 	return r.log.Warn(f, a...)
 }
 
-func (r *LoggerRegister) Error(f interface{}, a ...interface{}) string{
+func (r *LoggerRegister) Error(f interface{}, a ...interface{}) string {
 	return r.log.Error(f, a...)
 }
 
-func (r *LoggerRegister) Serious(f interface{}, a ...interface{})string {
+func (r *LoggerRegister) Serious(f interface{}, a ...interface{}) string {
 	return r.log.Serious(f, a...)
 }
 
@@ -43,13 +42,12 @@ func (r *LoggerRegister) Fatal(f interface{}, a ...interface{}) {
 
 // self define type field of highest level
 // the type print of non-color
-func (r *LoggerRegister) SPrintf(TractID,Type string, f interface{}, a ...interface{}) string {
-	return r.log.SPrintf(TractID,Type, f, a...)
+func (r *LoggerRegister) SPrintf(TractID, Type string, f interface{}, a ...interface{}) string {
+	return r.log.SPrintf(TractID, Type, f, a...)
 }
 
-
 func (r *LoggerRegister) defaultLoggerRegister() Logger {
-    return r.init()
+	return r.init()
 }
 
 func (r *LoggerRegister) newLoggerRegister(yamlPath string) (l Logger, err error) {

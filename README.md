@@ -54,11 +54,14 @@ func main () {
 
 	log := register.NewDefaultLogger()
 	defer log.Destroy()
+	fmt.Println(log.SPrintf(public.GenTraceID(),"warn", "hello world"))
 	log.Debug("hello world")
 	log.Info("Info")
 	log.Warn("Warn")
-	log.Error("Error")
-	log.Serious("Serious")
+	// close the row print color
+	log.Error("Error",logger.OffColor())
+	// close the row console output
+	log.Serious("hello world",logger.OffConsole())
   
 }
 ```
@@ -71,16 +74,16 @@ package main
 import "github.com/eliot-jay/logger"
 
 func main() {
-	log ,err := register.NewLogger("./logger.yaml")
-	if err!=nil{
-		panic(err)
-	}
+	log ,_ := logger.NewLoggerBy("./conf/logger.yaml")
 	defer log.Destroy()
+	fmt.Println(log.SPrintf(public.GenTraceID(),"warn", "hello world"))
 	log.Debug("hello world")
 	log.Info("Info")
 	log.Warn("Warn")
-	log.Error("Error")
-	log.Serious("Serious")  
+	// close the row print color
+	log.Error("Error",logger.OffColor())
+	// close the row write to disk
+	log.Serious("hello world",logger.OffWrite()) 
 }
 ```
 

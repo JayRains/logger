@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/shirou/gopsutil/cpu"
 	"github.com/shirou/gopsutil/mem"
+	"math"
 	"math/rand"
 	"os"
 	"runtime"
@@ -18,24 +19,24 @@ type brush func(string) string
 
 var (
 	Colors = []brush{
-		newBrush("1;41"), // Serious              红色底	0
-		newBrush("1;31"), // Error                红色		1
-		newBrush("1;35"), // Warn               紫红底	2
-		newBrush("1;34"), // Info               蓝色		3
-		newBrush("1;32"), // Debug              绿色		4
-		newBrush("4;36"), //underline          青色+下划线 5
+		newBrush("1;41"), // Serious            红色底		0
+		newBrush("1;31"), // Error              红色			1
+		newBrush("1;35"), // Warn               紫红底		2
+		newBrush("1;34"), // Info               蓝色			3
+		newBrush("1;32"), // Debug              绿色			4
+		newBrush("4;36"), //underline           青色+下划线	5
 	}
 )
 
 func init() {
 	//log level
+	GlobalLevelInt[Underline] = 5
 	GlobalLevelInt[DEBUG] = 4
 	GlobalLevelInt[INFO] = 3
 	GlobalLevelInt[WARN] = 2
 	GlobalLevelInt[ERRNO] = 1
 	GlobalLevelInt[SERIOUS] = 0
 	GlobalLevelInt[FATAL] = 0
-	GlobalLevelInt[Underline] = 5
 }
 
 func newBrush(color string) brush {
@@ -110,4 +111,10 @@ func GenTraceID() string {
 	hash.Write([]byte(base))
 	b.WriteString(fmt.Sprintf("%x ", hash.Sum(nil)))
 	return b.String()
+}
+
+// 0.245 => 0.25
+func Round(x float64) float64 {
+	n10 := math.Pow10(2)
+	return math.Trunc((x+0.5/n10)*n10) / n10
 }
