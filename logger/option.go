@@ -2,12 +2,12 @@ package logger
 
 import "github.com/eliot-jay/logger/public"
 
-//LoggerHandler ...
-//description:  LoggerHandler is logger option
+
+//LoggerHandler is logger option
 type LoggerHandler func(*logger)
 
-//OffWrite  ...
-//description:  close the row log write to disk
+
+//close the row log write to disk
 func OffWrite() LoggerHandler {
 	return func(l *logger) {
 		l.OnWrite = false
@@ -15,8 +15,8 @@ func OffWrite() LoggerHandler {
 	}
 }
 
-//OffColor  ...
-//description:  close the row log color to console
+
+//close the row log color to console
 func OffColor() LoggerHandler {
 	return func(l *logger) {
 		l.OnColor = false
@@ -24,11 +24,18 @@ func OffColor() LoggerHandler {
 	}
 }
 
-//OffConsole  ...
-//description:  close the row log print to console
+
+//close the row log print to console
 func OffConsole() LoggerHandler {
 	return func(l *logger) {
 		l.OnConsole = false
 		l.option = append(l.option, public.CallOffOnConsole)
+	}
+}
+
+// enable sprint console log
+func OnConsole() LoggerHandler {
+	return func(l *logger) {
+		l.OnConsole = true
 	}
 }

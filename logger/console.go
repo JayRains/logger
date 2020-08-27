@@ -105,6 +105,7 @@ func (log *logger) Serious(f interface{}, a ...interface{}) string {
 func (log *logger) Fatal(f interface{}, a ...interface{}) {
 	defer os.Exit(0)
 	defer log.lock.Unlock()
+	defer log.Destroy()
 	log.inspector(public.FATAL, f, a...)
 }
 
@@ -229,7 +230,7 @@ func (log *logger) ShouldBind(PathOrYaml interface{}) (l *logger, err error) {
 func (log *logger) inspector(level string, f interface{}, a ...interface{}) {
 	log.lock.Lock()
 	a = log.handleOption(a...)
-	if !log.OnConsole && !log.OnWrite {
+	if !log.OnConsole && !log.OnWrite{
 		return
 	}
 	if public.GlobalLevelInt[log.Level] >= public.GlobalLevelInt[level] {
@@ -257,13 +258,13 @@ func (log *logger) printRow(level string) {
 }
 
 func (log *logger) colorBrush(level string) string {
-	// 1. 获取染色函数
+	// 1. receiver color brush method
 	brushColor := public.Colors[public.GlobalLevelInt[level]]
-	// 2. 对需要的字符串进行染色
+	// 2. change text with color
 	nowTime := brushColor(log.NowTime)
 	filePath := brushColor(log.FilePath)
 	msg := brushColor(log.Identifier + ": " + log.Msg)
-	// 3. 返回已经染色的字符串
+	// 3. return has color text
 	return fmt.Sprintf("%v %v %v", nowTime, filePath, msg)
 }
 
@@ -288,6 +289,7 @@ func (log *logger) handleOption(o ...interface{}) (data []interface{}) {
 
 	return
 }
+
 
 func (log *logger) recoverOption() {
 	if len(log.option) == 0 {
