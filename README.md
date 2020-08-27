@@ -12,7 +12,7 @@
 ## 安装
 
 ```shel
-go get github.com/eliot-jay/logger
+go get -v -u github.com/eliot-jay/logger
 ```
 
 ##	日志的等级:
