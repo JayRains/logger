@@ -1,9 +1,10 @@
-package public
+package option
 
 import (
 	"bytes"
 	"crypto/sha1"
 	"fmt"
+	"github.com/gookit/color"
 	"github.com/shirou/gopsutil/cpu"
 	"github.com/shirou/gopsutil/mem"
 	"math"
@@ -19,31 +20,28 @@ type brush func(string) string
 
 var (
 	Colors = []brush{
-		newBrush("1;41"), // Serious            红色底		0
-		newBrush("1;31"), // Error              红色			1
-		newBrush("1;35"), // Warn               紫红底		2
-		newBrush("1;34"), // Info               蓝色			3
-		newBrush("1;32"), // Debug              绿色			4
-		newBrush("4;36"), //underline           青色+下划线	5
+		NewBrush(Red, true), // FATAL SERIOUS 红色底        0
+		NewBrush(Red),       // Error              红色			1
+		NewBrush(Purple),    // Warn               紫红		    2
+		NewBrush(Blue),      // Info               蓝色			3
+		NewBrush(Green),     // Debug              绿色			4
 	}
 )
 
 func init() {
 	//log level
-	GlobalLevelInt[Underline] = 5
-	GlobalLevelInt[DEBUG] = 4
-	GlobalLevelInt[INFO] = 3
-	GlobalLevelInt[WARN] = 2
-	GlobalLevelInt[ERRNO] = 1
-	GlobalLevelInt[SERIOUS] = 0
-	GlobalLevelInt[FATAL] = 0
+	globallevelint[SERIOUS] = 0
+	globallevelint[FATAL] = 0
+	globallevelint[ERRNO] = 1
+	globallevelint[WARN] = 2
+	globallevelint[INFO] = 3
+	globallevelint[DEBUG] = 4
+
 }
 
-func newBrush(color string) brush {
-	prefix := "\033[" // \033[ 1; 32m%s  \033[0m
-	suffix := "\033[0m"
+func NewBrush(hex string, isBG ...bool) brush {
 	return func(text string) string {
-		return prefix + color + "m" + text + suffix
+		return color.HEX(hex, isBG...).Sprint(text)
 	}
 
 }
@@ -73,19 +71,19 @@ func Format(f interface{}, v ...interface{}) string {
 	return fmt.Sprintf(msg, v...)
 }
 
-func ToString(i int) string {
-	return ":" + strconv.Itoa(i)
-}
-
 func FilePath() string {
+	skip := Skip
 	rpc := make([]uintptr, 1)
-	n := runtime.Callers(Skip, rpc[:])
+	if register {
+		skip++
+	}
+	n := runtime.Callers(skip, rpc[:])
 	if n < 1 {
 		return ""
 	}
 	frame, _ := runtime.CallersFrames(rpc).Next()
 	currentDir, _ := os.Getwd()
-	return strings.Replace(frame.File, currentDir+"/", "", -1) + ToString(frame.Line)
+	return strings.Replace(frame.File, currentDir+"/", "", -1) + ":" + strconv.Itoa(frame.Line)
 }
 
 func GenTraceID() string {

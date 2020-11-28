@@ -1,0 +1,4 @@
+2020-11-28 11:27:14 [DBUG] logger_test.go:12 : debug || Track: e509b047b956ef6082665c82cb03f2a5e9c8fca0  
+2020-11-28 11:27:14 [warn] logger_test.go:13 : hello world || Track: e71b931220c063b4415e85cab558eb59964b7513  
+2020-11-28 11:27:14 [INFO] logger_test.go:14 : Info || Track: aebef0197f885d2ba271daca8bcdae25a91772aa  
+2020-11-28 11:27:14 [WARN] logger_test.go:15 : Warn || Track: 2061cae0361899d7f89c2a7f9c262847d615a82f  

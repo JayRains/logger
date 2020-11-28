@@ -74,7 +74,7 @@ package main
 import "github.com/eliot-jay/logger"
 
 func main() {
-	log ,_ := logger.NewLoggerBy("./conf/logger.yaml")
+	log ,_ := logger.NewLoggerBy("./conf/option.yaml")
 	defer log.Destroy()
 	fmt.Println(log.SPrintf(public.GenTraceID(),"warn", "hello world"))
 	log.Debug("hello world")
