@@ -22,7 +22,7 @@ go get -v -u github.com/eliot-jay/logger
 | 等级 | 配置 | 释义                                             | 控制台颜色 |
 | ---- | ---- | ------------------------------------------------ | :--------: |
 | 0    | SERI |可能有危险的严重错误,如:初始化,数据库连接错误等 |红色底|
-| 0    | Fatal | 致命错误,将会停止程序 |红色底|
+| 0    | FAtA | 致命错误,将会停止程序 |红色底|
 | 1    | ERRO |普通错误,断言失败,类型转换失败等   						 |红色|
 | 2    | WARN | 普通警告，比如权限出错，访问异常等               |紫色底|
 | 3    | INFO | 重要消息                   									 |蓝色 |
@@ -54,11 +54,14 @@ func main () {
 
 	log := register.NewDefaultLogger()
 	defer log.Destroy()
+	fmt.Println(log.SPrintf(public.GenTraceID(),"warn", "hello world"))
 	log.Debug("hello world")
 	log.Info("Info")
 	log.Warn("Warn")
-	log.Error("Error")
-	log.Serious("Serious")
+	// close the row print color
+	log.Error("Error",logger.OffColor())
+	// close the row console output
+	log.Serious("hello world",logger.OffConsole())
   
 }
 ```
@@ -71,16 +74,16 @@ package main
 import "github.com/eliot-jay/logger"
 
 func main() {
-	log ,err := register.NewLogger("./config.yaml")
-	if err!=nil{
-		panic(err)
-	}
+	log ,_ := logger.NewLoggerBy("./conf/option.yaml")
 	defer log.Destroy()
+	fmt.Println(log.SPrintf(public.GenTraceID(),"warn", "hello world"))
 	log.Debug("hello world")
 	log.Info("Info")
 	log.Warn("Warn")
-	log.Error("Error")
-	log.Serious("Serious")  
+	// close the row print color
+	log.Error("Error",logger.OffColor())
+	// close the row write to disk
+	log.Serious("hello world",logger.OffWrite()) 
 }
 ```
 
@@ -89,7 +92,7 @@ func main() {
 ```yaml
 # 日志打印的配置
 loggerConfigure:
-  level: "DBUG"    # 日志的等级: debug , info , warn , error , serious , fatal
+  level: "DBUG"    # 日志的等级: DBUG , INFO , WARN , ERRO , SERI , FATA
   on-color: true   # 开启颜色
   on-write: true   # 开启日志文件记录
   on-console: true  # 开启控制台打印

@@ -1,38 +1,20 @@
 package logger
 
 import (
-	"fmt"
-	"github.com/eliot-jay/logger/public"
-	"github.com/eliot-jay/logger/register"
+	"github.com/eliot-jay/logger/option"
 	"testing"
-)
-var (
-	filter =  make(map[string]bool)
-	count = 0
 )
 
 func TestNewLogger(t *testing.T) {
-	log := register.NewDefaultLogger()
-	defer log.Destroy()
-	fmt.Println(log.Sprint("hello world").Text())
-	log.Debug("hello world")
-	log.Info("Info")
-	log.Warn("Warn")
-	log.Error("Error")
-	log.Serious("Serious")
-}
+	log := option.Default()
+	println := log.Register("HELLO", option.Purple, 4)
+	println("hello world")
+	//log.Debug("debug")
+	//log.Info("Info")
+	//log.Warn("Warn")
+	//// close the row print color
+	//log.Debug(log.Error("Error",))
+	//// close the row write to disk
+	//log.Serious("hello world",option.OffWrite())
 
-
-func BenchmarkAll(b *testing.B) {
-	for i:=0;i<b.N;i++{
-		iterateFilter(public.GenTraceID())
-	}
-}
-func iterateFilter(hash string ) bool {
-	if filter[hash]{
-		count++
-		return true
-	}
-	filter[hash] = true
-	return false
 }
